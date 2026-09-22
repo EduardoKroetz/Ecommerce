@@ -1,6 +1,22 @@
-@Ecommerce_HostAddress = http://localhost:5169
+@Ecommerce_HostAddress = http://localhost:8000/api
 
-GET {{Ecommerce_HostAddress}}/weatherforecast/
-Accept: application/json
+### Auth - Register
+POST {{Ecommerce_HostAddress}}/auth/register
+Content-Type: application/json
 
-###
+{
+    "Name": "John Doe",
+    "Email": "john.doe@example.com",
+    "Password": "securepassword123"
+}
+
+### Auth - Login
+POST {{Ecommerce_HostAddress}}/auth/login
+Content-Type: application/json
+
+{
+    "Email": "john.doe@example.com",
+    "Password": "securepassword123"
+}
+
+

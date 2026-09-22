@@ -14,8 +14,9 @@ public class AuthController(TokenService tokenService, UserManager<User> userMan
     {
         var user = new User
         {
+            Name = request.Name,
             Email = request.Email,
-            UserName = request.Name
+            UserName = request.Email
         };
 
         var result = await userManager.CreateAsync(user, request.Password);
