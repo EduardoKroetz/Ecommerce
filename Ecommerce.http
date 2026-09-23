@@ -19,4 +19,35 @@ Content-Type: application/json
     "Password": "securepassword123"
 }
 
+### Products
+@ProductId = 1
 
+POST {{Ecommerce_HostAddress}}/products
+Content-Type: application/json
+
+{
+    "Name": "Sample Product",
+    "Description": "This is a sample product.",
+    "Price": 19.99,
+    "StockBalance": 100
+}
+
+
+### Update
+PUT {{Ecommerce_HostAddress}}/products/{{ProductId}}
+Content-Type: application/json
+
+{
+    "Name": "Sample Product 2",
+    "Description": "This is a sample product 2.",
+    "Price": 29.99,
+    "StockBalance": 200
+}
+
+### List
+GET {{Ecommerce_HostAddress}}/products?name=sample&startPrice=&endPrice=&sort=a
+Content-Type: application/json
+
+### Get
+GET {{Ecommerce_HostAddress}}/products/{{ProductId}}
+Content-Type: application/json

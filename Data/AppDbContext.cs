@@ -10,4 +10,29 @@ public class AppDbContext : IdentityDbContext<User>
     {
     }
 
+    public DbSet<Product> Products { get; set; }
+    public DbSet<ProductCategory> ProductCategories { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        builder.Entity<Product>()
+            .HasMany(p => p.Categories)
+            .WithMany()
+            .UsingEntity<Dictionary<string, object>>("ProductsCategories");
+
+        builder.Entity<Product>()
+           .Property(p => p.Price)
+           .HasPrecision(18, 2);
+
+        builder.Entity<Product>()
+           .Property(p => p.Name)
+           .HasMaxLength(100)
+           .IsRequired();
+
+        builder.Entity<Product>()
+           .Property(p => p.Description)
+           .HasMaxLength(500);
+
+        base.OnModelCreating(builder);
+    }
 }
