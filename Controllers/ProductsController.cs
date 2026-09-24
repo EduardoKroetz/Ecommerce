@@ -12,43 +12,36 @@ public class ProductsController(AppDbContext dbContext) : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetProductById(int id)
     {
-        var product = await dbContext.Products.FindAsync(id);
+        var product = await dbContext.Products
+            .Select(GetProduct.MapExpression)
+            .FirstOrDefaultAsync(p => p.Id == id);
 
         if (product == null) return NotFound();
 
-        return Ok(GetProduct.Map(product));
+        return Ok(product);
     }
 
     [HttpGet]
     public async Task<IActionResult> GetProducts([FromQuery] GetProductsQuery query)
     {
         var queryable = dbContext.Products
-            .Include(p => p.Categories)
             .Where(p =>
-                (string.IsNullOrEmpty(query.Name) || p.Name.Contains(query.Name)) &&
-                (query.Categories.Count == 0 || query.Categories.Any(cId => p.Categories.Any(pc => pc.Id == cId))) &&
-                (query.StartPrice.HasValue && p.Price >= query.StartPrice.Value) &&
-                (query.EndPrice.HasValue && p.Price <= query.EndPrice.Value)
+                (string.IsNullOrWhiteSpace(query.Name) || p.Name.ToLower().Contains(query.Name.ToLower())) &&
+                (query.Categories == null || query.Categories.Count == 0 || query.Categories.Any(cId => p.Categories.Any(pc => pc.Id == cId))) &&
+                (query.StartPrice == null || p.Price >= query.StartPrice.Value) &&
+                (query.EndPrice == null || p.Price <= query.EndPrice.Value)
             )
-            .Select(p => GetProduct.Map(p))
+            .Select(GetProduct.MapExpression)
             .AsQueryable();
 
-        if (query.Sort == GetProductsQuery.SORT_BY_PRICE_DESC)
+        queryable = query.Sort switch
         {
-            queryable = queryable.OrderByDescending(p => p.Price);
-        }
-        else if (query.Sort == GetProductsQuery.SORT_BY_NAME_ASC)
-        {
-            queryable = queryable.OrderBy(p => p.Name);
-        }
-        else if (query.Sort == GetProductsQuery.SORT_BY_PRICE_ASC)
-        {
-            queryable = queryable.OrderBy(p => p.Price);
-        }
-        else if (query.Sort == GetProductsQuery.SORT_BY_CREATED_AT_ASC)
-        {
-            queryable = queryable.OrderBy(p => p.CreatedAt);
-        }
+            GetProductsQuery.SORT_BY_PRICE_DESC => queryable.OrderByDescending(p => p.Price),
+            GetProductsQuery.SORT_BY_NAME_ASC => queryable.OrderBy(p => p.Name),
+            GetProductsQuery.SORT_BY_PRICE_ASC => queryable.OrderBy(p => p.Price),
+            GetProductsQuery.SORT_BY_CREATED_AT_ASC => queryable.OrderBy(p => p.CreatedAt),
+            _ => queryable.OrderByDescending(p => p.CreatedAt),
+        };
 
         var products = await queryable
             .Skip(query.Skip)
@@ -90,7 +83,11 @@ public class ProductsController(AppDbContext dbContext) : ControllerBase
 
         await dbContext.SaveChangesAsync();
 
-        return Ok(GetProduct.Map(product));
+        var productResponse = await dbContext.Products
+            .Select(GetProduct.MapExpression)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        return Ok(productResponse);
     }
 
     [HttpDelete("{id}")]
@@ -103,6 +100,6 @@ public class ProductsController(AppDbContext dbContext) : ControllerBase
         dbContext.Products.Remove(product);
         await dbContext.SaveChangesAsync();
 
-        return Ok();
+        return NoContent();
     }
 }

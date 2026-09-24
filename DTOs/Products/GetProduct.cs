@@ -1,4 +1,5 @@
-﻿using Ecommerce.DTOs.ProductsCategories;
+﻿using System.Linq.Expressions;
+using Ecommerce.DTOs.ProductsCategories;
 using Ecommerce.Models;
 
 namespace Ecommerce.DTOs.Products;
@@ -14,9 +15,8 @@ public class GetProduct
 
     public List<GetProductCategory> Categories { get; set; } = [];
 
-    public static GetProduct Map(Product product)
-    {
-        return new()
+    public static Expression<Func<Product, GetProduct>> MapExpression =>
+        product => new GetProduct
         {
             Id = product.Id,
             Name = product.Name,
@@ -24,9 +24,6 @@ public class GetProduct
             Price = product.Price,
             StockBalance = product.StockBalance,
             CreatedAt = product.CreatedAt,
-            Categories = product.Categories.Select(GetProductCategory.FromModel).ToList()
+            Categories = product.Categories.AsQueryable().Select(GetProductCategory.MapExpression).ToList()
         };
-    }
-
-    public static IEnumerable<GetProduct> Map(IEnumerable<Product> products) => products.Select(Map);
 }

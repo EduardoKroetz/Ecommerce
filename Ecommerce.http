@@ -26,12 +26,11 @@ POST {{Ecommerce_HostAddress}}/products
 Content-Type: application/json
 
 {
-    "Name": "Sample Product",
-    "Description": "This is a sample product.",
+    "Name": "Sample Product 9",
+    "Description": "This is a sample product 9.",
     "Price": 19.99,
     "StockBalance": 100
 }
-
 
 ### Update
 PUT {{Ecommerce_HostAddress}}/products/{{ProductId}}
@@ -45,7 +44,7 @@ Content-Type: application/json
 }
 
 ### List
-GET {{Ecommerce_HostAddress}}/products?name=sample&startPrice=&endPrice=&sort=a
+GET {{Ecommerce_HostAddress}}/products?name=Sample&startPrice=19&endPrice=20&sort=
 Content-Type: application/json
 
 ### Get
