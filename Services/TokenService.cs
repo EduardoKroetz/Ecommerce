@@ -21,8 +21,8 @@ public class TokenService
 
         var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Sub, userId),
-            new(JwtRegisteredClaimNames.Email, email),
+            new(ClaimTypes.NameIdentifier, userId),
+            new(ClaimTypes.Email, email),
         };
 
         var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtKey));

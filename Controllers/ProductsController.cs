@@ -1,15 +1,18 @@
 ﻿using Ecommerce.Data;
 using Ecommerce.DTOs.Products;
 using Ecommerce.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ecommerce.Controllers;
 
 [Route("api/[controller]")]
+[Authorize]
 public class ProductsController(AppDbContext dbContext) : ControllerBase
 {
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetProductById(int id)
     {
         var product = await dbContext.Products
@@ -22,6 +25,7 @@ public class ProductsController(AppDbContext dbContext) : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetProducts([FromQuery] GetProductsQuery query)
     {
         var queryable = dbContext.Products
