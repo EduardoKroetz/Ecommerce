@@ -1,19 +1,37 @@
+using System.Text;
 using Ecommerce.Data;
+using Ecommerce.Models;
 using Ecommerce.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
-using Ecommerce.Models;
-using System.Text;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using Scalar.AspNetCore;
 
 [assembly: ApiController]
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<AppDbContext>(options => 
+builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((doc, ctx, ct) =>
+    {
+        doc.Components ??= new();
+        doc.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+        doc.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme()
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT"
+        };
+        return Task.CompletedTask;
+    });
+});
 
 builder.Services.AddIdentity<User, IdentityRole>(options =>
 {
@@ -65,5 +83,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapOpenApi();
+app.MapScalarApiReference(x => x
+    .AddPreferredSecuritySchemes(["Bearer"])
+    .EnablePersistentAuthentication());
 
 app.Run();
