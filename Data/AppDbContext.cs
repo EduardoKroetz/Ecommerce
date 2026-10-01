@@ -12,6 +12,8 @@ public class AppDbContext : IdentityDbContext<User>
 
     public DbSet<Product> Products { get; set; }
     public DbSet<ProductCategory> ProductCategories { get; set; }
+    public DbSet<Cart> Carts { get; set; }
+    public DbSet<CartItem> CartItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -32,6 +34,31 @@ public class AppDbContext : IdentityDbContext<User>
         builder.Entity<Product>()
            .Property(p => p.Description)
            .HasMaxLength(500);
+
+        builder.Entity<ProductCategory>()
+           .Property(pc => pc.Name)
+           .HasMaxLength(100)
+           .IsRequired();
+
+        builder.Entity<Cart>()
+           .HasMany<CartItem>()
+           .WithOne(ci => ci.Cart)
+           .HasForeignKey(ci => ci.CartId)
+           .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Cart>()
+           .HasOne<User>()
+           .WithOne()
+           .HasForeignKey<Cart>(c => c.UserId)
+           .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CartItem>()
+           .HasOne(ci => ci.Product)
+           .WithMany()
+           .HasForeignKey(ci => ci.ProductId)
+           .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CartItem>().HasIndex(ci => new { ci.CartId, ci.ProductId }).IsUnique();
 
         base.OnModelCreating(builder);
     }

@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using Ecommerce.DTOs.ProductsCategories;
+using Ecommerce.DTOs.ProductCategories;
 using Ecommerce.Models;
 
 namespace Ecommerce.DTOs.Products;

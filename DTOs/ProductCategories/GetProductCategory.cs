@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Ecommerce.Models;
 
-namespace Ecommerce.DTOs.ProductsCategories;
+namespace Ecommerce.DTOs.ProductCategories;
 
 public class GetProductCategory
 {
