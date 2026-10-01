@@ -16,6 +16,7 @@ public class ProductsController(AppDbContext dbContext) : ControllerBase
     public async Task<IActionResult> GetProductById(int id)
     {
         var product = await dbContext.Products
+            .AsNoTracking()
             .Select(GetProduct.MapExpression)
             .FirstOrDefaultAsync(p => p.Id == id);
 
@@ -29,6 +30,7 @@ public class ProductsController(AppDbContext dbContext) : ControllerBase
     public async Task<IActionResult> GetProducts([FromQuery] GetProductsQuery query)
     {
         var queryable = dbContext.Products
+            .AsNoTracking()
             .Where(p =>
                 (string.IsNullOrWhiteSpace(query.Name) || p.Name.ToLower().Contains(query.Name.ToLower())) &&
                 (query.Categories == null || query.Categories.Count == 0 || query.Categories.Any(cId => p.Categories.Any(pc => pc.Id == cId))) &&
@@ -70,7 +72,7 @@ public class ProductsController(AppDbContext dbContext) : ControllerBase
         dbContext.Products.Add(product);
         await dbContext.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
+        return CreatedAtAction(nameof(GetProductById), new { id = product.Id });
     }
 
     [HttpPut("{id}")]

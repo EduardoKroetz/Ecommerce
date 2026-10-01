@@ -12,7 +12,7 @@ Quando se usa um método comum do C# dentro do .Select() — tipo .Select(p => G
 Isso acontece porque o EF não consegue ler o código que está dentro do método C# para traduzir para SQL. Exemplo:
 
 ```
-var products =await _dbContext.Products
+var products = await _dbContext.Products
     .Select(p => GetProduct.Map(p))
     .OrderBy(dto => dto.CreatedAt)// ERRO: O EF não sabe o que é 'CreatedAt' no banco
     .ToListAsync();
