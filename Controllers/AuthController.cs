@@ -21,7 +21,7 @@ public class AuthController(TokenService tokenService, UserManager<User> userMan
 
         var result = await userManager.CreateAsync(user, request.Password);
         if (!result.Succeeded)
-            return BadRequest(new { Message = "Failed to create user." });
+            return Problem(title: "Failed to create user.", statusCode: StatusCodes.Status400BadRequest);
 
         var token = tokenService.GenerateToken(user.Id, request.Email);
 
@@ -33,11 +33,11 @@ public class AuthController(TokenService tokenService, UserManager<User> userMan
     {
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user == null)
-            return Unauthorized(new { Message = "Invalid email or password." });
+            return Problem(title: "Invalid email or password.", statusCode: StatusCodes.Status401Unauthorized);
 
         var isPasswordValid = await userManager.CheckPasswordAsync(user, request.Password);
         if (!isPasswordValid)
-            return Unauthorized(new { Message = "Invalid email or password." });
+            return Problem(title: "Invalid email or password.", statusCode: StatusCodes.Status401Unauthorized);
 
         var token = tokenService.GenerateToken(user.Id, request.Email);
 

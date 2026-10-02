@@ -88,7 +88,7 @@ public class CartController(AppDbContext dbContext) : ControllerBase
 
         if (cartItem == null)
         {
-            return NotFound("Item not found in cart.");
+            return Problem(title: "Item not found in cart.", statusCode: StatusCodes.Status404NotFound);
         }
 
         dbContext.CartItems.Remove(cartItem);
@@ -108,7 +108,7 @@ public class CartController(AppDbContext dbContext) : ControllerBase
 
         if (cartItem == null)
         {
-            return NotFound("Item not found in cart.");
+            return Problem(title: "Item not found in cart.", statusCode: StatusCodes.Status404NotFound);
         }
 
         cartItem.Quantity = request.Quantity;
