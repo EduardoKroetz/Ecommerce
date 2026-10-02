@@ -14,6 +14,8 @@ public class AppDbContext : IdentityDbContext<User>
     public DbSet<ProductCategory> ProductCategories { get; set; }
     public DbSet<Cart> Carts { get; set; }
     public DbSet<CartItem> CartItems { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -59,6 +61,18 @@ public class AppDbContext : IdentityDbContext<User>
            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<CartItem>().HasIndex(ci => new { ci.CartId, ci.ProductId }).IsUnique();
+
+        builder.Entity<Order>()
+           .HasMany(o => o.Items)
+           .WithOne()
+           .HasForeignKey(oi => oi.OrderId)
+           .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<OrderItem>()
+           .HasOne(oi => oi.Product)
+           .WithMany()
+           .HasForeignKey(oi => oi.ProductId)
+           .OnDelete(DeleteBehavior.Restrict);
 
         base.OnModelCreating(builder);
     }

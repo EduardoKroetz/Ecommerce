@@ -103,6 +103,15 @@ public class ProductsController(AppDbContext dbContext) : ControllerBase
 
         if (product == null) return NotFound();
 
+        var hasOrders = await dbContext.OrderItems.AnyAsync(oi => oi.ProductId == id);
+        if (hasOrders)
+        {
+            return Problem(
+                title: "Product cannot be deleted.",
+                detail: "This product belongs to existing orders.",
+                statusCode: StatusCodes.Status409Conflict);
+        }
+
         dbContext.Products.Remove(product);
         await dbContext.SaveChangesAsync();
 
