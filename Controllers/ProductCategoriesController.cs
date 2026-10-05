@@ -51,7 +51,10 @@ public class ProductCategoriesController(AppDbContext dbContext) : ControllerBas
         dbContext.ProductCategories.Add(productCategory);
         await dbContext.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetProductCategoryById), new { id = productCategory.Id });
+        return CreatedAtAction(
+            actionName: nameof(GetProductCategoryById),
+            routeValues: new { id = productCategory.Id },
+            value: null);
     }
 
     [HttpPut("{id}")]
