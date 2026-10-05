@@ -104,7 +104,8 @@ public class ProductsController(AppDbContext dbContext) : ControllerBase
     {
         var product = await dbContext.Products.FindAsync(id);
 
-        if (product == null) return NotFound();
+        if (product == null)
+            return Problem(title: "Product not found.", statusCode: StatusCodes.Status404NotFound);
 
         var hasOrders = await dbContext.OrderItems.AnyAsync(oi => oi.ProductId == id);
         if (hasOrders)
@@ -116,6 +117,49 @@ public class ProductsController(AppDbContext dbContext) : ControllerBase
         }
 
         dbContext.Products.Remove(product);
+        await dbContext.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpPost("{productId:int}/categories/{productCategoryId:int}")]
+    public async Task<IActionResult> AddProductCategory([FromRoute] int productId, [FromRoute] int productCategoryId)
+    {
+        var product = await dbContext.Products
+            .Include(p => p.Categories)
+            .FirstOrDefaultAsync(p => p.Id == productId);
+
+        if (product == null)
+            return Problem(title: "Product not found.", statusCode: StatusCodes.Status404NotFound);
+
+        var productCategory = await dbContext.ProductCategories.FindAsync(productCategoryId);
+        if (productCategory == null)
+            return Problem(title: "Product category not found.", statusCode: StatusCodes.Status404NotFound);
+
+        product.Categories.Add(productCategory);
+        await dbContext.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpDelete("{productId:int}/categories/{productCategoryId:int}")]
+    public async Task<IActionResult> RemoveProductCategory([FromRoute] int productId, [FromRoute] int productCategoryId)
+    {
+        var product = await dbContext.Products
+            .Include(p => p.Categories)
+            .FirstOrDefaultAsync(p => p.Id == productId);
+
+        if (product == null)
+            return Problem(title: "Product not found.", statusCode: StatusCodes.Status404NotFound);
+
+        var productCategory = await dbContext.ProductCategories.FindAsync(productCategoryId);
+        if (productCategory == null)
+            return Problem(title: "Product category not found.", statusCode: StatusCodes.Status404NotFound);
+
+        if (product.Categories.Any(c => c.Id == productCategoryId) == false)
+            return Problem(title: "Product category is not associated with the product.", statusCode: StatusCodes.Status400BadRequest);
+
+        product.Categories.Remove(productCategory);
         await dbContext.SaveChangesAsync();
 
         return NoContent();
