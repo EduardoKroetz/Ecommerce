@@ -34,6 +34,9 @@ public class CartController(AppDbContext dbContext) : ControllerBase
     {
         var userId = User.GetUserId();
 
+        if (!await dbContext.Products.AnyAsync(p => p.Id == request.ProductId))
+            return Problem(title: "Product not found.", statusCode: StatusCodes.Status404NotFound);
+
         var cart = await dbContext.Carts.FirstOrDefaultAsync(c => c.UserId == userId);
         if (cart == null)
         {
