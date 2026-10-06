@@ -64,13 +64,31 @@ public class OrdersController(AppDbContext dbContext) : ControllerBase
             Items = orderItems
         };
 
-        await dbContext.Orders.AddAsync(order);
+        await using var transaction = await dbContext.Database.BeginTransactionAsync();
 
+        foreach (var item in orderItems)
+        {
+            // Update the stock balance of the product with atomic operation to avoid concurrency issues
+            var updatedRows = await dbContext.Products
+                .Where(p => p.Id == item.ProductId && p.StockBalance >= item.Quantity)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.StockBalance, p => p.StockBalance - item.Quantity));
+
+            if (updatedRows == 0)
+            {
+                await transaction.RollbackAsync();
+
+                return Problem(
+                    title: "Insufficient stock",
+                    detail: $"Product '{item.ProductName}' no longer has enough stock.",
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+        }
+
+        await dbContext.Orders.AddAsync(order);
         dbContext.CartItems.RemoveRange(cartItems);
 
-        cartItems.ForEach(ci => ci.Product.StockBalance -= ci.Quantity);
-
         await dbContext.SaveChangesAsync();
+        await transaction.CommitAsync();
 
         return Ok(new { OrderId = order.Id });
     }

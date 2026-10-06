@@ -6,6 +6,6 @@ public class AddToCartRequest
 {
     public int ProductId { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "Quantity must be at least 1.")]
+    [Range(1, 9999, ErrorMessage = "Quantity must be between {1} and {2}.")]
     public int Quantity { get; set; }
 }
