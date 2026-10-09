@@ -1,0 +1,20 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="docker-compose.yml" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/docs/" />
+  <Folder Name="/docs/adr/">
+    <File Path="docs/adr/0001-uso-de-postgres.md" />
+    <File Path="docs/adr/0002-persistencia-e-modelagem-do-carrinho.md" />
+    <File Path="docs/adr/0003-preco-vivo-carrinho-vs-congelado-pedido.md" />
+    <File Path="docs/adr/0004-checkout-apenas-via-carrinho-v1.md" />
+    <File Path="docs/adr/0005-problemdetails-para-erros.md" />
+    <File Path="docs/adr/0006-mapeamento-dto-via-expression.md" />
+    <File Path="docs/adr/0007-dominio-anemico-na-v1.md" />
+  </Folder>
+  <Project Path="Ecommerce.Api/Ecommerce.Api.csproj" />
+  <Project Path="Ecommerce.Application/Ecommerce.Application.csproj" />
+  <Project Path="Ecommerce.Domain/Ecommerce.Domain.csproj" />
+  <Project Path="Ecommerce.Infra/Ecommerce.Infra.csproj" />
+</Solution>
