@@ -10,7 +10,9 @@ public interface IProductRepository
     Task<GetProduct?> GetDetailByIdAsync(int id, CancellationToken cancellationToken = default);
 
     Task<Product> GetByIdAsync(int id, CancellationToken cancellationToken = default);
-    Task<Product> CreateAsync(Product product, CancellationToken cancellationToken = default);
+    Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default);
     Task<Product> UpdateAsync(Product product, CancellationToken cancellationToken = default);
     Task DeleteAsync(Product product, CancellationToken cancellationToken = default);
+
+    Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default);
 }

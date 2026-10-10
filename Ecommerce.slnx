@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Solution Items/">
+    <File Path="Conventions.md" />
     <File Path="docker-compose.yml" />
     <File Path="README.md" />
   </Folder>
@@ -12,6 +13,8 @@
     <File Path="docs/adr/0005-problemdetails-para-erros.md" />
     <File Path="docs/adr/0006-mapeamento-dto-via-expression.md" />
     <File Path="docs/adr/0007-dominio-anemico-na-v1.md" />
+    <File Path="docs/adr/0008-repository-para-acesso-a-dados.md" />
+    <File Path="docs/adr/0009-separacao-leitura-e-escrita-no-acesso-a-dados.md" />
   </Folder>
   <Project Path="Ecommerce.Api/Ecommerce.Api.csproj" />
   <Project Path="Ecommerce.Application/Ecommerce.Application.csproj" />

@@ -2,5 +2,5 @@
 
 public interface ICurrentUserProvider
 {
-    string GetCurrentUserId();
+    string UserId { get; }
 }

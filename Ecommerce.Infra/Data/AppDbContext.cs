@@ -1,10 +1,11 @@
-﻿using Ecommerce.Models;
+﻿using Ecommerce.Domain.Entities;
+using Ecommerce.Infra.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace Ecommerce.Data;
+namespace Ecommerce.Infra.Data;
 
-public class AppDbContext : IdentityDbContext<User>
+public class AppDbContext : IdentityDbContext<ApplicationUser>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -43,13 +44,13 @@ public class AppDbContext : IdentityDbContext<User>
            .IsRequired();
 
         builder.Entity<Cart>()
-           .HasMany<CartItem>()
+           .HasMany<CartItem>(x => x.Items)
            .WithOne(ci => ci.Cart)
            .HasForeignKey(ci => ci.CartId)
            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<Cart>()
-           .HasOne<User>()
+           .HasOne<ApplicationUser>()
            .WithOne()
            .HasForeignKey<Cart>(c => c.UserId)
            .OnDelete(DeleteBehavior.Cascade);

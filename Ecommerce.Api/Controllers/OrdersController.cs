@@ -1,14 +1,7 @@
-﻿using Ecommerce.Data;
-using Ecommerce.DTOs;
-using Ecommerce.DTOs.Orders;
-using Ecommerce.Enums;
-using Ecommerce.Extensions;
-using Ecommerce.Models;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-namespace Ecommerce.Controllers;
+namespace Ecommerce.Api.Controllers;
 
 [Route("api/[controller]")]
 [Authorize]
@@ -17,78 +10,7 @@ public class OrdersController(AppDbContext dbContext) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateOrder()
     {
-        var userId = User.GetUserId();
 
-        var cartItems = await dbContext.CartItems
-            .Include(ci => ci.Product)
-            .Where(ci => ci.Cart.UserId == userId)
-            .ToListAsync();
-
-        if (cartItems.Count == 0)
-        {
-            return Problem(title: "Cart is empty.", statusCode: StatusCodes.Status400BadRequest);
-        }
-
-        var itemsWithInsufficientStock = cartItems
-            .Where(ci => ci.Quantity > ci.Product.StockBalance)
-            .Select(ci => new { ci.ProductId, ci.Product.Name, ci.Product.StockBalance, ci.Quantity })
-            .ToList();
-
-        if (itemsWithInsufficientStock.Count > 0)
-        {
-            return Problem(
-                title: "Insufficient stock",
-                detail: "Some items in your cart have insufficient stock.",
-                statusCode: StatusCodes.Status400BadRequest,
-                extensions: new Dictionary<string, object?>
-                {
-                    ["items"] = itemsWithInsufficientStock
-                });
-        }
-
-        var orderItems = cartItems.Select(ci => new OrderItem
-        {
-            ProductId = ci.ProductId,
-            ProductName = ci.Product.Name,
-            Quantity = ci.Quantity,
-            UnitPrice = ci.Product.Price,
-            TotalPrice = ci.Product.Price * ci.Quantity,
-        }).ToList();
-
-        var order = new Order
-        {
-            UserId = userId,
-            Status = EOrderStatus.Created,
-            CreatedAt = DateTime.UtcNow,
-            TotalAmount = orderItems.Sum(oi => oi.TotalPrice),
-            Items = orderItems
-        };
-
-        await using var transaction = await dbContext.Database.BeginTransactionAsync();
-
-        foreach (var item in orderItems)
-        {
-            // Update the stock balance of the product with atomic operation to avoid concurrency issues
-            var updatedRows = await dbContext.Products
-                .Where(p => p.Id == item.ProductId && p.StockBalance >= item.Quantity)
-                .ExecuteUpdateAsync(s => s.SetProperty(p => p.StockBalance, p => p.StockBalance - item.Quantity));
-
-            if (updatedRows == 0)
-            {
-                await transaction.RollbackAsync();
-
-                return Problem(
-                    title: "Insufficient stock",
-                    detail: $"Product '{item.ProductName}' no longer has enough stock.",
-                    statusCode: StatusCodes.Status400BadRequest);
-            }
-        }
-
-        await dbContext.Orders.AddAsync(order);
-        dbContext.CartItems.RemoveRange(cartItems);
-
-        await dbContext.SaveChangesAsync();
-        await transaction.CommitAsync();
 
         return Ok(new { OrderId = order.Id });
     }
