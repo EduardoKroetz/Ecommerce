@@ -5,4 +5,5 @@ namespace Ecommerce.Infra.Identity;
 
 public class ApplicationUser : IdentityUser, IUser
 {
+    public required string Name { get; set; }
 }

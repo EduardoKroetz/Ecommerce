@@ -9,4 +9,6 @@ public class CartItem
 
     public Product Product { get; set; } = null!;
     public Cart Cart { get; set; } = null!;
+
+    public const int MAX_QUANTITY = 9999;
 }

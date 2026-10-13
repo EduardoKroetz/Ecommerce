@@ -22,4 +22,8 @@ public class GetOrder
         CreatedAt = order.CreatedAt,
         Items = order.Items.AsQueryable().Select(GetOrderItem.MapExpression).ToList()
     };
+
+    private static readonly Func<Order, GetOrder> CompiledMap = MapExpression.Compile();
+
+    public static GetOrder Map(Order order) => CompiledMap(order);
 }

@@ -12,8 +12,10 @@ public class GetCart
         cart => new GetCart
         {
             Id = cart.Id,
-            Items = cart.Items.Select(GetCartItem.MapExpression.Compile()).ToList()
+            Items = cart.Items.AsQueryable().Select(GetCartItem.MapExpression).ToList()
         };
 
-    public static GetCart Map(Cart cart) => MapExpression.Compile().Invoke(cart);
+    private static readonly Func<Cart, GetCart> CompiledMap = MapExpression.Compile();
+
+    public static GetCart Map(Cart cart) => CompiledMap(cart);
 }

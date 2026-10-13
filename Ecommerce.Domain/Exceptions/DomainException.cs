@@ -5,10 +5,18 @@ public class DomainException : Exception
     public string Code { get; set; }
     public object? Details { get; set; }
 
-    public DomainException(string code, string message, object? details = null) : base(message)
+    public DomainException(EDomainExceptionCode code, string message, object? details = null) : base(message)
     {
-        Code = code;
+        Code = code.ToString();
         Details = details;
     }
 }
 
+public enum EDomainExceptionCode
+{
+    CartNotFound,
+    CartEmpty,
+    InsufficientStock,
+    OrderNotFound,
+    OrderAlreadyCancelled
+}

@@ -2,7 +2,7 @@
 
 namespace Ecommerce.Application.DTOs.Products;
 
-public class GetProductsQuery : PaginationRequest
+public class GetProductsQuery : PaginationQuery
 {
     public string? Name { get; set; }
     public List<int>? Categories { get; set; }

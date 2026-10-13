@@ -12,7 +12,7 @@ public class JwtTokenService : ITokenService
     private readonly SymmetricSecurityKey _key;
     private readonly string _jwtIssuer;
     private readonly string _jwtAudience;
-    private readonly DateTime _expires;
+    private readonly double _expiryInMinutes;
 
     public JwtTokenService(IConfiguration configuration)
     {
@@ -24,7 +24,7 @@ public class JwtTokenService : ITokenService
         _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         _jwtIssuer = jwtIssuer;
         _jwtAudience = jwtAudience;
-        _expires = DateTime.UtcNow.AddMinutes(double.Parse(expires));
+        _expiryInMinutes = double.Parse(expires);
     }
 
     public string GenerateAccessToken(IUser user)
@@ -41,7 +41,7 @@ public class JwtTokenService : ITokenService
             issuer: _jwtIssuer,
             audience: _jwtAudience,
             claims: claims,
-            expires: _expires,
+            expires: DateTime.UtcNow.AddMinutes(_expiryInMinutes),
             signingCredentials: creds
         );
 

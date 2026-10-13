@@ -19,7 +19,7 @@ public class AuthService(IIdentityService identityService, ITokenService tokenSe
 
     public async Task<RegisterUserResponse> RegisterAsync(RegisterUserRequest request)
     {
-        var user = await identityService.CreateUserAsync(request.Email, request.Password);
+        var user = await identityService.CreateUserAsync(request.Name, request.Email, request.Password);
 
         var token = tokenService.GenerateAccessToken(user);
 

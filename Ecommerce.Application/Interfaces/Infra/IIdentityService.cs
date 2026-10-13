@@ -4,6 +4,6 @@ namespace Ecommerce.Application.Interfaces.Infra;
 
 public interface IIdentityService
 {
-    Task<IUser> CreateUserAsync(string email, string password);
+    Task<IUser> CreateUserAsync(string name, string email, string password);
     Task<IUser> AuthenticateAsync(string email, string password);
 }

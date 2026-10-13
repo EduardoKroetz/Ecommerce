@@ -1,4 +1,5 @@
-﻿using Ecommerce.Application.DTOs.Orders;
+﻿using Ecommerce.Application.DTOs;
+using Ecommerce.Application.DTOs.Orders;
 using Ecommerce.Application.Interfaces.Infra;
 using Ecommerce.Application.Interfaces.Repositories;
 using Ecommerce.Domain.Entities;
@@ -7,18 +8,32 @@ using Ecommerce.Domain.Exceptions;
 
 namespace Ecommerce.Application.Services;
 
-public class OrderService(IOrderRepository orderRepository, ICartRepository cartRepository, ICurrentUserProvider userProvider)
+public class OrderService(
+    IOrderRepository orderRepository,
+    ICartRepository cartRepository,
+    IProductRepository productRepository,
+    ICurrentUserProvider userProvider,
+    IUnitOfWork uof)
 {
+    public async Task<PagedResult<GetOrder>> SearchAsync(PaginationQuery query)
+    {
+        return await orderRepository.SearchByUserIdAsync(userProvider.UserId, query);
+    }
+
+    public async Task<GetOrder?> GetByIdAsync(int orderId)
+    {
+        return await orderRepository.GetDetailByIdAndUserIdAsync(orderId, userProvider.UserId) ?? throw new NotFoundException("Order not found.");
+    }
+
     public async Task<GetOrder> CreateAsync()
     {
         var userId = userProvider.UserId;
 
-        var cart = await cartRepository.GetByUserIdAsync(userId) ?? throw new NotFoundException("Cart not found.");
+        var cart = await cartRepository.GetByUserIdAsync(userId)
+            ?? throw new NotFoundException("Cart not found.");
 
         if (cart.Items.Count == 0)
-        {
-            throw new DomainException("Cart cannot be empty.");
-        }
+            throw new DomainException(EDomainExceptionCode.CartEmpty, "Cart cannot be empty.");
 
         var itemsWithInsufficientStock = cart.Items
             .Where(ci => ci.Quantity > ci.Product.StockBalance)
@@ -26,18 +41,9 @@ public class OrderService(IOrderRepository orderRepository, ICartRepository cart
             .ToList();
 
         if (itemsWithInsufficientStock.Count > 0)
-        {
-            return Problem(
-                title: "Insufficient stock",
-                detail: "Some items in your cart have insufficient stock.",
-                statusCode: StatusCodes.Status400BadRequest,
-                extensions: new Dictionary<string, object?>
-                {
-                    ["items"] = itemsWithInsufficientStock
-                });
-        }
+            throw new DomainException(EDomainExceptionCode.InsufficientStock, "Some items in your cart have insufficient stock.", new { items = itemsWithInsufficientStock });
 
-        var orderItems = cartItems.Select(ci => new OrderItem
+        var orderItems = cart.Items.Select(ci => new OrderItem
         {
             ProductId = ci.ProductId,
             ProductName = ci.Product.Name,
@@ -55,30 +61,44 @@ public class OrderService(IOrderRepository orderRepository, ICartRepository cart
             Items = orderItems
         };
 
-        await using var transaction = await dbContext.Database.BeginTransactionAsync();
+        await using var transaction = await uof.BeginTransactionAsync();
 
         foreach (var item in orderItems)
         {
-            // Update the stock balance of the product with atomic operation to avoid concurrency issues
-            var updatedRows = await dbContext.Products
-                .Where(p => p.Id == item.ProductId && p.StockBalance >= item.Quantity)
-                .ExecuteUpdateAsync(s => s.SetProperty(p => p.StockBalance, p => p.StockBalance - item.Quantity));
+            var stockDecrementResult = await productRepository.TryDecrementStockAsync(item.ProductId, item.Quantity);
 
-            if (updatedRows == 0)
+            if (!stockDecrementResult)
             {
                 await transaction.RollbackAsync();
 
-                return Problem(
-                    title: "Insufficient stock",
-                    detail: $"Product '{item.ProductName}' no longer has enough stock.",
-                    statusCode: StatusCodes.Status400BadRequest);
+                throw new DomainException(EDomainExceptionCode.InsufficientStock, $"Product '{item.ProductName}' no longer has enough stock.");
             }
         }
 
-        await dbContext.Orders.AddAsync(order);
-        dbContext.CartItems.RemoveRange(cartItems);
+        await orderRepository.AddAsync(order);
 
-        await dbContext.SaveChangesAsync();
+        cart.Items.Clear();
+        await cartRepository.UpdateAsync(cart);
+
         await transaction.CommitAsync();
+
+        return GetOrder.Map(order);
+    }
+
+    public async Task CancelAsync(int orderId)
+    {
+        var userId = userProvider.UserId;
+
+        var order = await orderRepository.GetByIdAndUserIdAsync(orderId, userId)
+            ?? throw new NotFoundException("Order not found.");
+
+        if (order.Status == EOrderStatus.Cancelled)
+            throw new DomainException(EDomainExceptionCode.OrderAlreadyCancelled, "Order is already cancelled.");
+
+        order.Status = EOrderStatus.Cancelled;
+
+        order.Items.ForEach(oi => oi.Product.StockBalance += oi.Quantity);
+
+        await orderRepository.UpdateAsync(order);
     }
 }

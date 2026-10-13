@@ -1,44 +1,92 @@
-﻿using Ecommerce.Application.DTOs;
+using Ecommerce.Application.DTOs;
 using Ecommerce.Application.DTOs.Products;
 using Ecommerce.Application.Interfaces.Repositories;
 using Ecommerce.Domain.Entities;
+using Ecommerce.Infra.Data;
+using Ecommerce.Infra.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Ecommerce.Infra.Repositories;
 
-public class ProductRepository : IProductRepository
+public class ProductRepository(AppDbContext dbContext) : IProductRepository
 {
-    public Task<PagedResult<GetProduct>> SearchAsync(GetProductsQuery query, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<GetProduct>> SearchAsync(GetProductsQuery query, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var productQuery = dbContext.Products
+            .AsNoTracking()
+            .Where(p =>
+                (string.IsNullOrWhiteSpace(query.Name) || p.Name.ToLower().Contains(query.Name.ToLower())) &&
+                (query.Categories == null || query.Categories.Count == 0 || query.Categories.Any(cId => p.Categories.Any(pc => pc.Id == cId))) &&
+                (query.StartPrice == null || p.Price >= query.StartPrice.Value) &&
+                (query.EndPrice == null || p.Price <= query.EndPrice.Value)
+            );
+
+        var orderedQuery = query.Sort switch
+        {
+            GetProductsQuery.SORT_BY_PRICE_DESC => productQuery.OrderByDescending(p => p.Price),
+            GetProductsQuery.SORT_BY_NAME_ASC => productQuery.OrderBy(p => p.Name),
+            GetProductsQuery.SORT_BY_PRICE_ASC => productQuery.OrderBy(p => p.Price),
+            GetProductsQuery.SORT_BY_CREATED_AT_ASC => productQuery.OrderBy(p => p.CreatedAt),
+            _ => productQuery.OrderByDescending(p => p.CreatedAt),
+        };
+
+        return await orderedQuery
+            .ThenBy(p => p.Id)
+            .ToPagedResultAsync(GetProduct.MapExpression, query);
     }
 
-    public Task<GetProduct?> GetDetailByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<GetProduct?> GetDetailByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await dbContext.Products
+            .AsNoTracking()
+            .Where(p => p.Id == id)
+            .Select(GetProduct.MapExpression)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public Task<Product> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<Product?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await dbContext.Products
+            .Include(p => p.Categories)
+            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
 
-    public Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await dbContext.Products.AnyAsync(p => p.Id == id, cancellationToken);
     }
 
-    public Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default)
+    public async Task<bool> HasOrdersAsync(int id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await dbContext.OrderItems.AnyAsync(oi => oi.ProductId == id, cancellationToken);
     }
 
-    public Task DeleteAsync(Product product, CancellationToken cancellationToken = default)
+    public async Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        await dbContext.Products.AddAsync(product, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return product;
     }
 
-    public Task<Product> UpdateAsync(Product product, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Product product, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        dbContext.Products.Remove(product);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<Product> UpdateAsync(Product product, CancellationToken cancellationToken = default)
+    {
+        dbContext.Products.Update(product);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return product;
+    }
+
+    public async Task<bool> TryDecrementStockAsync(int productId, int quantity)
+    {
+        var updatedRows = await dbContext.Products
+            .Where(p => p.Id == productId && p.StockBalance >= quantity)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.StockBalance, p => p.StockBalance - quantity));
+
+        return updatedRows > 0;
     }
 }

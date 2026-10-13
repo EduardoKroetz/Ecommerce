@@ -1,26 +1,19 @@
-﻿using Ecommerce.Data;
-using Ecommerce.DTOs.Products;
-using Ecommerce.Models;
+using Ecommerce.Application.DTOs.Products;
+using Ecommerce.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-namespace Ecommerce.Controllers;
+namespace Ecommerce.Api.Controllers;
 
 [Route("api/[controller]")]
 [Authorize]
-public class ProductsController(AppDbContext dbContext) : ControllerBase
+public class ProductsController(ProductService productService) : ControllerBase
 {
     [HttpGet("{id}")]
     [AllowAnonymous]
     public async Task<IActionResult> GetProductById(int id)
     {
-        var product = await dbContext.Products
-            .AsNoTracking()
-            .Select(GetProduct.MapExpression)
-            .FirstOrDefaultAsync(p => p.Id == id);
-
-        if (product == null) return NotFound();
+        var product = await productService.GetByIdAsync(id);
 
         return Ok(product);
     }
@@ -29,30 +22,7 @@ public class ProductsController(AppDbContext dbContext) : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetProducts([FromQuery] GetProductsQuery query)
     {
-        var queryable = dbContext.Products
-            .AsNoTracking()
-            .Where(p =>
-                (string.IsNullOrWhiteSpace(query.Name) || p.Name.ToLower().Contains(query.Name.ToLower())) &&
-                (query.Categories == null || query.Categories.Count == 0 || query.Categories.Any(cId => p.Categories.Any(pc => pc.Id == cId))) &&
-                (query.StartPrice == null || p.Price >= query.StartPrice.Value) &&
-                (query.EndPrice == null || p.Price <= query.EndPrice.Value)
-            )
-            .Select(GetProduct.MapExpression)
-            .AsQueryable();
-
-        queryable = query.Sort switch
-        {
-            GetProductsQuery.SORT_BY_PRICE_DESC => queryable.OrderByDescending(p => p.Price),
-            GetProductsQuery.SORT_BY_NAME_ASC => queryable.OrderBy(p => p.Name),
-            GetProductsQuery.SORT_BY_PRICE_ASC => queryable.OrderBy(p => p.Price),
-            GetProductsQuery.SORT_BY_CREATED_AT_ASC => queryable.OrderBy(p => p.CreatedAt),
-            _ => queryable.OrderByDescending(p => p.CreatedAt),
-        };
-
-        var products = await queryable
-            .Skip(query.Skip)
-            .Take(query.Take)
-            .ToListAsync();
+        var products = await productService.SearchAsync(query);
 
         return Ok(products);
     }
@@ -60,64 +30,26 @@ public class ProductsController(AppDbContext dbContext) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateProduct([FromBody] UpsertProductRequest request)
     {
-        var product = new Product
-        {
-            Name = request.Name,
-            Description = request.Description,
-            Price = request.Price,
-            StockBalance = request.StockBalance,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        dbContext.Products.Add(product);
-        await dbContext.SaveChangesAsync();
+        var product = await productService.CreateAsync(request);
 
         return CreatedAtAction(
             actionName: nameof(GetProductById),
             routeValues: new { id = product.Id },
-            value: null);
+            value: product);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpsertProductRequest request)
     {
-        var product = await dbContext.Products.FindAsync(id);
+        var product = await productService.UpdateAsync(id, request);
 
-        if (product == null) return NotFound();
-
-        product.Name = request.Name;
-        product.Description = request.Description;
-        product.Price = request.Price;
-        product.StockBalance = request.StockBalance;
-
-        await dbContext.SaveChangesAsync();
-
-        var productResponse = await dbContext.Products
-            .Select(GetProduct.MapExpression)
-            .FirstOrDefaultAsync(p => p.Id == id);
-
-        return Ok(productResponse);
+        return Ok(product);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProduct(int id)
     {
-        var product = await dbContext.Products.FindAsync(id);
-
-        if (product == null)
-            return Problem(title: "Product not found.", statusCode: StatusCodes.Status404NotFound);
-
-        var hasOrders = await dbContext.OrderItems.AnyAsync(oi => oi.ProductId == id);
-        if (hasOrders)
-        {
-            return Problem(
-                title: "Product cannot be deleted.",
-                detail: "This product belongs to existing orders.",
-                statusCode: StatusCodes.Status409Conflict);
-        }
-
-        dbContext.Products.Remove(product);
-        await dbContext.SaveChangesAsync();
+        await productService.DeleteAsync(id);
 
         return NoContent();
     }
@@ -125,19 +57,7 @@ public class ProductsController(AppDbContext dbContext) : ControllerBase
     [HttpPost("{productId:int}/categories/{productCategoryId:int}")]
     public async Task<IActionResult> AddProductCategory([FromRoute] int productId, [FromRoute] int productCategoryId)
     {
-        var product = await dbContext.Products
-            .Include(p => p.Categories)
-            .FirstOrDefaultAsync(p => p.Id == productId);
-
-        if (product == null)
-            return Problem(title: "Product not found.", statusCode: StatusCodes.Status404NotFound);
-
-        var productCategory = await dbContext.ProductCategories.FindAsync(productCategoryId);
-        if (productCategory == null)
-            return Problem(title: "Product category not found.", statusCode: StatusCodes.Status404NotFound);
-
-        product.Categories.Add(productCategory);
-        await dbContext.SaveChangesAsync();
+        await productService.AddCategoryAsync(productId, productCategoryId);
 
         return NoContent();
     }
@@ -145,22 +65,7 @@ public class ProductsController(AppDbContext dbContext) : ControllerBase
     [HttpDelete("{productId:int}/categories/{productCategoryId:int}")]
     public async Task<IActionResult> RemoveProductCategory([FromRoute] int productId, [FromRoute] int productCategoryId)
     {
-        var product = await dbContext.Products
-            .Include(p => p.Categories)
-            .FirstOrDefaultAsync(p => p.Id == productId);
-
-        if (product == null)
-            return Problem(title: "Product not found.", statusCode: StatusCodes.Status404NotFound);
-
-        var productCategory = await dbContext.ProductCategories.FindAsync(productCategoryId);
-        if (productCategory == null)
-            return Problem(title: "Product category not found.", statusCode: StatusCodes.Status404NotFound);
-
-        if (product.Categories.Any(c => c.Id == productCategoryId) == false)
-            return Problem(title: "Product category is not associated with the product.", statusCode: StatusCodes.Status400BadRequest);
-
-        product.Categories.Remove(productCategory);
-        await dbContext.SaveChangesAsync();
+        await productService.RemoveCategoryAsync(productId, productCategoryId);
 
         return NoContent();
     }

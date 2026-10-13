@@ -1,14 +1,12 @@
-﻿using Ecommerce.Application.Interfaces.Infra;
+using System.Security.Claims;
+using Ecommerce.Application.Interfaces.Infra;
+using Ecommerce.Domain.Exceptions;
 using Microsoft.AspNetCore.Http;
 
 namespace Ecommerce.Infra.Services;
 
 public class CurrentUserProvider(IHttpContextAccessor httpContextAccessor) : ICurrentUserProvider
 {
-    public string GetCurrentUserId()
-    {
-        var httpContext = httpContextAccessor.HttpContext;
-
-        return httpContext?.User?.FindFirst("sub")?.Value ?? throw new UnauthorizedAccessException("User not found");
-    }
+    public string UserId => httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier)
+        ?? throw new UnauthorizedException("User not found");
 }

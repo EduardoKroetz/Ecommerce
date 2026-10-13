@@ -79,7 +79,7 @@ public class CartService(ICartRepository cartRepository, ICurrentUserProvider us
 
         await cartRepository.UpdateAsync(cart);
 
-        return GetCart.Map(cart);
+        return (await cartRepository.GetDetailByUserIdAsync(userId))!;
     }
 
     public async Task<GetCart> RemoveFromCartAsync(int productId)

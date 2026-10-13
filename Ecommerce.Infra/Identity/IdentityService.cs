@@ -11,15 +11,16 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
     {
         var user = await userManager.FindByEmailAsync(email);
         if (user == null || !await userManager.CheckPasswordAsync(user, password))
-            throw new InvalidOperationException("Invalid email or password");
+            throw new UnauthorizedException("Invalid email or password.");
 
         return user;
     }
 
-    public async Task<IUser> CreateUserAsync(string email, string password)
+    public async Task<IUser> CreateUserAsync(string name, string email, string password)
     {
         var newUser = new ApplicationUser
         {
+            Name = name,
             UserName = email,
             Email = email,
         };

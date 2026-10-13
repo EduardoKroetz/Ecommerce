@@ -20,9 +20,9 @@ public class CartController(CartService cartService) : ControllerBase
     [HttpPost("items")]
     public async Task<IActionResult> AddToCart(AddToCartRequest request)
     {
-        await cartService.AddToCartAsync(request);
+        var cart = await cartService.AddToCartAsync(request);
 
-        return Ok();
+        return Ok(cart);
     }
 
     [HttpDelete("items/{productId:int}")]
