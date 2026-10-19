@@ -1,8 +1,10 @@
 using System.Text.Json.Serialization;
+using Ecommerce.Api.Authorization;
 using Ecommerce.Api.Middlewares;
 using Ecommerce.Application.Extensions;
 using Ecommerce.Infra.Data;
 using Ecommerce.Infra.Extensions;
+using Ecommerce.Infra.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -37,6 +39,11 @@ builder.Services
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(Policies.RequireSeller, policy => policy.RequireClaim(AppClaimTypes.SellerId));
+});
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

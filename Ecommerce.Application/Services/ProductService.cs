@@ -1,13 +1,19 @@
 using Ecommerce.Application.DTOs;
 using Ecommerce.Application.DTOs.Products;
+using Ecommerce.Application.Interfaces.Infra;
 using Ecommerce.Application.Interfaces.Repositories;
 using Ecommerce.Domain.Entities;
 using Ecommerce.Domain.Exceptions;
 
 namespace Ecommerce.Application.Services;
 
-public class ProductService(IProductRepository productRepository, IProductCategoryRepository productCategoryRepository)
+public class ProductService(
+    IProductRepository productRepository,
+    IProductCategoryRepository productCategoryRepository,
+    ICurrentUserProvider userProvider)
 {
+    private int CurrentSellerId => userProvider.SellerId ?? throw new UnauthorizedException("User is not a seller.");
+
     public async Task<PagedResult<GetProduct>> SearchAsync(GetProductsQuery query)
     {
         return await productRepository.SearchAsync(query);
@@ -22,6 +28,7 @@ public class ProductService(IProductRepository productRepository, IProductCatego
     {
         var product = new Product
         {
+            SellerId = CurrentSellerId,
             Name = request.Name,
             Description = request.Description,
             Price = request.Price,
@@ -36,7 +43,7 @@ public class ProductService(IProductRepository productRepository, IProductCatego
 
     public async Task<GetProduct> UpdateAsync(int id, UpsertProductRequest request)
     {
-        var product = await productRepository.GetByIdAsync(id)
+        var product = await productRepository.GetByIdAndSellerIdAsync(id, CurrentSellerId)
             ?? throw new NotFoundException("Product not found.");
 
         product.Name = request.Name;
@@ -51,7 +58,7 @@ public class ProductService(IProductRepository productRepository, IProductCatego
 
     public async Task DeleteAsync(int id)
     {
-        var product = await productRepository.GetByIdAsync(id)
+        var product = await productRepository.GetByIdAndSellerIdAsync(id, CurrentSellerId)
             ?? throw new NotFoundException("Product not found.");
 
         if (await productRepository.HasOrdersAsync(id))
@@ -62,7 +69,7 @@ public class ProductService(IProductRepository productRepository, IProductCatego
 
     public async Task AddCategoryAsync(int productId, int productCategoryId)
     {
-        var product = await productRepository.GetByIdAsync(productId)
+        var product = await productRepository.GetByIdAndSellerIdAsync(productId, CurrentSellerId)
             ?? throw new NotFoundException("Product not found.");
 
         var productCategory = await productCategoryRepository.GetByIdAsync(productCategoryId)
@@ -75,7 +82,7 @@ public class ProductService(IProductRepository productRepository, IProductCatego
 
     public async Task RemoveCategoryAsync(int productId, int productCategoryId)
     {
-        var product = await productRepository.GetByIdAsync(productId)
+        var product = await productRepository.GetByIdAndSellerIdAsync(productId, CurrentSellerId)
             ?? throw new NotFoundException("Product not found.");
 
         var productCategory = await productCategoryRepository.GetByIdAsync(productCategoryId)

@@ -8,6 +8,8 @@ namespace Ecommerce.Application.DTOs.Orders;
 public class GetOrder
 {
     public int Id { get; set; }
+    public int PurchaseId { get; set; }
+    public int SellerId { get; set; }
     public EOrderStatus Status { get; set; }
     public decimal TotalAmount { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -17,6 +19,8 @@ public class GetOrder
     public static Expression<Func<Order, GetOrder>> MapExpression => order => new GetOrder
     {
         Id = order.Id,
+        PurchaseId = order.PurchaseId,
+        SellerId = order.SellerId,
         Status = order.Status,
         TotalAmount = order.TotalAmount,
         CreatedAt = order.CreatedAt,

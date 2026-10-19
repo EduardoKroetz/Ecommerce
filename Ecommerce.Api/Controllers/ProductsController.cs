@@ -1,3 +1,4 @@
+using Ecommerce.Api.Authorization;
 using Ecommerce.Application.DTOs.Products;
 using Ecommerce.Application.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -28,6 +29,7 @@ public class ProductsController(ProductService productService) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = Policies.RequireSeller)]
     public async Task<IActionResult> CreateProduct([FromBody] UpsertProductRequest request)
     {
         var product = await productService.CreateAsync(request);
@@ -39,6 +41,7 @@ public class ProductsController(ProductService productService) : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = Policies.RequireSeller)]
     public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpsertProductRequest request)
     {
         var product = await productService.UpdateAsync(id, request);
@@ -47,6 +50,7 @@ public class ProductsController(ProductService productService) : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = Policies.RequireSeller)]
     public async Task<IActionResult> DeleteProduct(int id)
     {
         await productService.DeleteAsync(id);
@@ -55,6 +59,7 @@ public class ProductsController(ProductService productService) : ControllerBase
     }
 
     [HttpPost("{productId:int}/categories/{productCategoryId:int}")]
+    [Authorize(Policy = Policies.RequireSeller)]
     public async Task<IActionResult> AddProductCategory([FromRoute] int productId, [FromRoute] int productCategoryId)
     {
         await productService.AddCategoryAsync(productId, productCategoryId);
@@ -63,6 +68,7 @@ public class ProductsController(ProductService productService) : ControllerBase
     }
 
     [HttpDelete("{productId:int}/categories/{productCategoryId:int}")]
+    [Authorize(Policy = Policies.RequireSeller)]
     public async Task<IActionResult> RemoveProductCategory([FromRoute] int productId, [FromRoute] int productCategoryId)
     {
         await productService.RemoveCategoryAsync(productId, productCategoryId);

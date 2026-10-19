@@ -1,4 +1,5 @@
-﻿using Ecommerce.Application.DTOs;
+﻿using Ecommerce.Api.Authorization;
+using Ecommerce.Application.DTOs;
 using Ecommerce.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,22 +10,6 @@ namespace Ecommerce.Api.Controllers;
 [Authorize]
 public class OrdersController(OrderService orderService) : ControllerBase
 {
-    [HttpPost]
-    public async Task<IActionResult> CreateOrder()
-    {
-        var order = await orderService.CreateAsync();
-
-        return Ok(order);
-    }
-
-    [HttpPatch("{orderId:int}/cancel")]
-    public async Task<IActionResult> CancelOrder(int orderId)
-    {
-        await orderService.CancelAsync(orderId);
-
-        return NoContent();
-    }
-
     [HttpGet]
     public async Task<IActionResult> GetOrders([FromQuery] PaginationQuery query)
     {
@@ -39,5 +24,30 @@ public class OrdersController(OrderService orderService) : ControllerBase
         var order = await orderService.GetByIdAsync(orderId);
 
         return Ok(order);
+    }
+
+    [HttpPost("{orderId:int}/cancel")]
+    public async Task<IActionResult> CancelOrder(int orderId)
+    {
+        await orderService.CancelAsync(orderId);
+
+        return NoContent();
+    }
+
+    [HttpPost("{orderId:int}/ship")]
+    [Authorize(Policy = Policies.RequireSeller)]
+    public async Task<IActionResult> ShipOrder(int orderId)
+    {
+        await orderService.ShipAsync(orderId);
+
+        return NoContent();
+    }
+
+    [HttpPost("{orderId:int}/confirm-delivery")]
+    public async Task<IActionResult> ConfirmDelivery(int orderId)
+    {
+        await orderService.ConfirmDeliveryAsync(orderId);
+
+        return NoContent();
     }
 }

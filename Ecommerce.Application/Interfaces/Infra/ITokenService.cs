@@ -4,5 +4,5 @@ namespace Ecommerce.Application.Interfaces.Infra;
 
 public interface ITokenService
 {
-    string GenerateAccessToken(IUser user);
+    string GenerateAccessToken(IUser user, int? sellerId);
 }

@@ -18,5 +18,10 @@ public enum EDomainExceptionCode
     CartEmpty,
     InsufficientStock,
     OrderNotFound,
-    OrderAlreadyCancelled
+    OrderAlreadyCancelled,
+    OrderCancelled,
+    InvalidOrderStatus,
+    PurchaseAlreadyCancelled,
+    PurchaseCancelled,
+    PurchaseAlreadyPaid
 }

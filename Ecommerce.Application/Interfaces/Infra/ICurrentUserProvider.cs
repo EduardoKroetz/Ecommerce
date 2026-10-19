@@ -3,4 +3,5 @@
 public interface ICurrentUserProvider
 {
     string UserId { get; }
+    int? SellerId { get; }
 }

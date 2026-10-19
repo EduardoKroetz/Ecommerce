@@ -27,13 +27,16 @@ public class JwtTokenService : ITokenService
         _expiryInMinutes = double.Parse(expires);
     }
 
-    public string GenerateAccessToken(IUser user)
+    public string GenerateAccessToken(IUser user, int? sellerId)
     {
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id),
             new(ClaimTypes.Email, user.Email),
         };
+
+        if (sellerId.HasValue)
+            claims.Add(new Claim(AppClaimTypes.SellerId, sellerId.Value.ToString()));
 
         var creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256);
 

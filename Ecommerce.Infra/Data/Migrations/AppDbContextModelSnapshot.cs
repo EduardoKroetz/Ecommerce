@@ -22,7 +22,7 @@ namespace Ecommerce.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Ecommerce.Models.Cart", b =>
+            modelBuilder.Entity("Ecommerce.Domain.Entities.Cart", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -45,7 +45,7 @@ namespace Ecommerce.Data.Migrations
                     b.ToTable("Carts");
                 });
 
-            modelBuilder.Entity("Ecommerce.Models.CartItem", b =>
+            modelBuilder.Entity("Ecommerce.Domain.Entities.CartItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -72,7 +72,7 @@ namespace Ecommerce.Data.Migrations
                     b.ToTable("CartItems");
                 });
 
-            modelBuilder.Entity("Ecommerce.Models.Order", b =>
+            modelBuilder.Entity("Ecommerce.Domain.Entities.Order", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -83,22 +83,28 @@ namespace Ecommerce.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("PurchaseId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SellerId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("numeric");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("PurchaseId");
+
+                    b.HasIndex("SellerId");
 
                     b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("Ecommerce.Models.OrderItem", b =>
+            modelBuilder.Entity("Ecommerce.Domain.Entities.OrderItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -134,7 +140,7 @@ namespace Ecommerce.Data.Migrations
                     b.ToTable("OrderItems");
                 });
 
-            modelBuilder.Entity("Ecommerce.Models.Product", b =>
+            modelBuilder.Entity("Ecommerce.Domain.Entities.Product", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -158,15 +164,20 @@ namespace Ecommerce.Data.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<int>("SellerId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("StockBalance")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("SellerId");
+
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("Ecommerce.Models.ProductCategory", b =>
+            modelBuilder.Entity("Ecommerce.Domain.Entities.ProductCategory", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -184,7 +195,61 @@ namespace Ecommerce.Data.Migrations
                     b.ToTable("ProductCategories");
                 });
 
-            modelBuilder.Entity("Ecommerce.Models.User", b =>
+            modelBuilder.Entity("Ecommerce.Domain.Entities.Purchase", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("OriginalTotalAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("PaymentMethod")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Purchases");
+                });
+
+            modelBuilder.Entity("Ecommerce.Domain.Entities.Seller", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Sellers");
+                });
+
+            modelBuilder.Entity("Ecommerce.Infra.Identity.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -399,24 +464,24 @@ namespace Ecommerce.Data.Migrations
                     b.ToTable("ProductsCategories");
                 });
 
-            modelBuilder.Entity("Ecommerce.Models.Cart", b =>
+            modelBuilder.Entity("Ecommerce.Domain.Entities.Cart", b =>
                 {
-                    b.HasOne("Ecommerce.Models.User", null)
+                    b.HasOne("Ecommerce.Infra.Identity.ApplicationUser", null)
                         .WithOne()
-                        .HasForeignKey("Ecommerce.Models.Cart", "UserId")
+                        .HasForeignKey("Ecommerce.Domain.Entities.Cart", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Ecommerce.Models.CartItem", b =>
+            modelBuilder.Entity("Ecommerce.Domain.Entities.CartItem", b =>
                 {
-                    b.HasOne("Ecommerce.Models.Cart", "Cart")
-                        .WithMany()
+                    b.HasOne("Ecommerce.Domain.Entities.Cart", "Cart")
+                        .WithMany("Items")
                         .HasForeignKey("CartId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Ecommerce.Models.Product", "Product")
+                    b.HasOne("Ecommerce.Domain.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -427,21 +492,65 @@ namespace Ecommerce.Data.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("Ecommerce.Models.OrderItem", b =>
+            modelBuilder.Entity("Ecommerce.Domain.Entities.Order", b =>
                 {
-                    b.HasOne("Ecommerce.Models.Order", null)
+                    b.HasOne("Ecommerce.Domain.Entities.Purchase", "Purchase")
+                        .WithMany("Orders")
+                        .HasForeignKey("PurchaseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Ecommerce.Domain.Entities.Seller", null)
+                        .WithMany()
+                        .HasForeignKey("SellerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Purchase");
+                });
+
+            modelBuilder.Entity("Ecommerce.Domain.Entities.OrderItem", b =>
+                {
+                    b.HasOne("Ecommerce.Domain.Entities.Order", null)
                         .WithMany("Items")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Ecommerce.Models.Product", "Product")
+                    b.HasOne("Ecommerce.Domain.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Ecommerce.Domain.Entities.Product", b =>
+                {
+                    b.HasOne("Ecommerce.Domain.Entities.Seller", null)
+                        .WithMany()
+                        .HasForeignKey("SellerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Ecommerce.Domain.Entities.Purchase", b =>
+                {
+                    b.HasOne("Ecommerce.Infra.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Ecommerce.Domain.Entities.Seller", b =>
+                {
+                    b.HasOne("Ecommerce.Infra.Identity.ApplicationUser", null)
+                        .WithOne()
+                        .HasForeignKey("Ecommerce.Domain.Entities.Seller", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -455,7 +564,7 @@ namespace Ecommerce.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("Ecommerce.Models.User", null)
+                    b.HasOne("Ecommerce.Infra.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -464,7 +573,7 @@ namespace Ecommerce.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("Ecommerce.Models.User", null)
+                    b.HasOne("Ecommerce.Infra.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -479,7 +588,7 @@ namespace Ecommerce.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Ecommerce.Models.User", null)
+                    b.HasOne("Ecommerce.Infra.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -488,7 +597,7 @@ namespace Ecommerce.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("Ecommerce.Models.User", null)
+                    b.HasOne("Ecommerce.Infra.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -497,22 +606,32 @@ namespace Ecommerce.Data.Migrations
 
             modelBuilder.Entity("ProductsCategories", b =>
                 {
-                    b.HasOne("Ecommerce.Models.ProductCategory", null)
+                    b.HasOne("Ecommerce.Domain.Entities.ProductCategory", null)
                         .WithMany()
                         .HasForeignKey("CategoriesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Ecommerce.Models.Product", null)
+                    b.HasOne("Ecommerce.Domain.Entities.Product", null)
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Ecommerce.Models.Order", b =>
+            modelBuilder.Entity("Ecommerce.Domain.Entities.Cart", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Ecommerce.Domain.Entities.Order", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Ecommerce.Domain.Entities.Purchase", b =>
+                {
+                    b.Navigation("Orders");
                 });
 #pragma warning restore 612, 618
         }

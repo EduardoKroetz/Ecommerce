@@ -1,7 +1,10 @@
-﻿namespace Ecommerce.Domain.Enums;
+namespace Ecommerce.Domain.Enums;
 
 public enum EOrderStatus
 {
-    Created,
+    AwaitingPayment,
+    AwaitingShipment,
+    Shipped,
+    Delivered,
     Cancelled
 }

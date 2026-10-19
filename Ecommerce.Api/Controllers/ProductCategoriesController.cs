@@ -1,3 +1,4 @@
+using Ecommerce.Api.Authorization;
 using Ecommerce.Application.DTOs;
 using Ecommerce.Application.DTOs.ProductCategories;
 using Ecommerce.Application.Services;
@@ -29,6 +30,7 @@ public class ProductCategoriesController(ProductCategoryService productCategoryS
     }
 
     [HttpPost]
+    [Authorize(Policy = Policies.RequireSeller)]
     public async Task<IActionResult> CreateProductCategory([FromBody] UpsertProductCategoryRequest request)
     {
         var productCategory = await productCategoryService.CreateAsync(request);
@@ -40,6 +42,7 @@ public class ProductCategoriesController(ProductCategoryService productCategoryS
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = Policies.RequireSeller)]
     public async Task<IActionResult> UpdateProductCategory(int id, [FromBody] UpsertProductCategoryRequest request)
     {
         var productCategory = await productCategoryService.UpdateAsync(id, request);
@@ -48,6 +51,7 @@ public class ProductCategoriesController(ProductCategoryService productCategoryS
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = Policies.RequireSeller)]
     public async Task<IActionResult> DeleteProductCategory(int id)
     {
         await productCategoryService.DeleteAsync(id);

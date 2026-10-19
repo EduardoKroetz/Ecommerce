@@ -15,6 +15,14 @@ public class AuthController(AuthService authService) : ControllerBase
         return Ok(response);
     }
 
+    [HttpPost("register/seller")]
+    public async Task<IActionResult> RegisterSeller([FromBody] RegisterSellerRequest request)
+    {
+        var response = await authService.RegisterSellerAsync(request);
+
+        return Ok(response);
+    }
+
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginUserRequest request)
     {

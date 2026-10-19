@@ -44,11 +44,11 @@ public class ProductRepository(AppDbContext dbContext) : IProductRepository
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<Product?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<Product?> GetByIdAndSellerIdAsync(int id, int sellerId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Products
             .Include(p => p.Categories)
-            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == id && p.SellerId == sellerId, cancellationToken);
     }
 
     public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default)

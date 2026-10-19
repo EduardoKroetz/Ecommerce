@@ -17,6 +17,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<CartItem> CartItems { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<Seller> Sellers { get; set; }
+    public DbSet<Purchase> Purchases { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -73,6 +75,38 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
            .HasOne(oi => oi.Product)
            .WithMany()
            .HasForeignKey(oi => oi.ProductId)
+           .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Seller>()
+           .HasOne<ApplicationUser>()
+           .WithOne()
+           .HasForeignKey<Seller>(s => s.UserId)
+           .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Seller>().HasIndex(s => s.UserId).IsUnique();
+
+        builder.Entity<Product>()
+           .HasOne<Seller>()
+           .WithMany()
+           .HasForeignKey(p => p.SellerId)
+           .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Order>()
+           .HasOne<Seller>()
+           .WithMany()
+           .HasForeignKey(o => o.SellerId)
+           .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Purchase>()
+           .HasMany(p => p.Orders)
+           .WithOne(o => o.Purchase)
+           .HasForeignKey(o => o.PurchaseId)
+           .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Purchase>()
+           .HasOne<ApplicationUser>()
+           .WithMany()
+           .HasForeignKey(p => p.UserId)
            .OnDelete(DeleteBehavior.Restrict);
 
         base.OnModelCreating(builder);
