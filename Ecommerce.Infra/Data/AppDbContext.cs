@@ -33,16 +33,16 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<Product>()
            .Property(p => p.Name)
-           .HasMaxLength(100)
+           .HasMaxLength(Product.NameMaxLength)
            .IsRequired();
 
         builder.Entity<Product>()
            .Property(p => p.Description)
-           .HasMaxLength(500);
+           .HasMaxLength(Product.DescriptionMaxLength);
 
         builder.Entity<ProductCategory>()
            .Property(pc => pc.Name)
-           .HasMaxLength(100)
+           .HasMaxLength(ProductCategory.NameMaxLength)
            .IsRequired();
 
         builder.Entity<Cart>()

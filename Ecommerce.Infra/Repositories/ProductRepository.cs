@@ -23,10 +23,10 @@ public class ProductRepository(AppDbContext dbContext) : IProductRepository
 
         var orderedQuery = query.Sort switch
         {
-            GetProductsQuery.SORT_BY_PRICE_DESC => productQuery.OrderByDescending(p => p.Price),
-            GetProductsQuery.SORT_BY_NAME_ASC => productQuery.OrderBy(p => p.Name),
-            GetProductsQuery.SORT_BY_PRICE_ASC => productQuery.OrderBy(p => p.Price),
-            GetProductsQuery.SORT_BY_CREATED_AT_ASC => productQuery.OrderBy(p => p.CreatedAt),
+            GetProductsQuery.SortByPriceDesc => productQuery.OrderByDescending(p => p.Price),
+            GetProductsQuery.SortByNameAsc => productQuery.OrderBy(p => p.Name),
+            GetProductsQuery.SortByPriceAsc => productQuery.OrderBy(p => p.Price),
+            GetProductsQuery.SortByCreatedAtAsc => productQuery.OrderBy(p => p.CreatedAt),
             _ => productQuery.OrderByDescending(p => p.CreatedAt),
         };
 

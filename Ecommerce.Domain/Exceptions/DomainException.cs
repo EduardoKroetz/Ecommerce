@@ -23,5 +23,6 @@ public enum EDomainExceptionCode
     InvalidOrderStatus,
     PurchaseAlreadyCancelled,
     PurchaseCancelled,
-    PurchaseAlreadyPaid
+    PurchaseAlreadyPaid,
+    CartItemQuantityExceeded
 }

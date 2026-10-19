@@ -1,14 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Ecommerce.Domain.Entities;
 
 namespace Ecommerce.Application.DTOs.Products;
 
 public class UpsertProductRequest
 {
     [Required(ErrorMessage = "Product name is required.")]
-    [MaxLength(100, ErrorMessage = "Product name cannot exceed 100 characters.")]
+    [MaxLength(Product.NameMaxLength, ErrorMessage = "Product name cannot exceed {1} characters.")]
     public required string Name { get; set; }
 
-    [MaxLength(500, ErrorMessage = "Product description cannot exceed 500 characters.")]
+    [MaxLength(Product.DescriptionMaxLength, ErrorMessage = "Product description cannot exceed {1} characters.")]
     public string? Description { get; set; }
 
     [Required(ErrorMessage = "Product price is required.")]

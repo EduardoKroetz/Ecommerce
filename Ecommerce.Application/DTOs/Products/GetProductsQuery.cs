@@ -10,8 +10,8 @@ public class GetProductsQuery : PaginationQuery
     public decimal? EndPrice { get; set; }
     public string? Sort { get; set; }
 
-    public const string SORT_BY_NAME_ASC = "name_asc";
-    public const string SORT_BY_PRICE_ASC = "price_asc";
-    public const string SORT_BY_PRICE_DESC = "price_desc";
-    public const string SORT_BY_CREATED_AT_ASC = "created_at_asc";
+    public const string SortByNameAsc = "name_asc";
+    public const string SortByPriceAsc = "price_asc";
+    public const string SortByPriceDesc = "price_desc";
+    public const string SortByCreatedAtAsc = "created_at_asc";
 }

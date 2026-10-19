@@ -63,15 +63,13 @@ public class CartService(ICartRepository cartRepository, ICurrentUserProvider us
 
         if (cartItem != null)
         {
-            cartItem.Quantity += request.Quantity;
+            cartItem.IncreaseQuantity(request.Quantity);
         }
         else
         {
-            cartItem = new CartItem
+            cartItem = new CartItem(request.ProductId, request.Quantity)
             {
-                CartId = cart.Id,
-                ProductId = request.ProductId,
-                Quantity = request.Quantity
+                CartId = cart.Id
             };
 
             cart.Items.Add(cartItem);
@@ -116,7 +114,7 @@ public class CartService(ICartRepository cartRepository, ICurrentUserProvider us
         if (cartItem == null)
             throw new NotFoundException($"Cart item not found in cart.");
 
-        cartItem.Quantity = request.Quantity;
+        cartItem.SetQuantity(request.Quantity);
         await cartRepository.UpdateAsync(cart);
 
         return GetCart.Map(cart);

@@ -2,6 +2,9 @@
 
 public class Product
 {
+    public const int NameMaxLength = 100;
+    public const int DescriptionMaxLength = 500;
+
     public int Id { get; set; }
     public required int SellerId { get; set; }
     public required string Name { get; set; }

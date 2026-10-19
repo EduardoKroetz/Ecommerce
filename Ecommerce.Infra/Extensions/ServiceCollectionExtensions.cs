@@ -1,6 +1,7 @@
 using System.Text;
 using Ecommerce.Application.Interfaces.Infra;
 using Ecommerce.Application.Interfaces.Repositories;
+using Ecommerce.Application.Policies;
 using Ecommerce.Infra.Data;
 using Ecommerce.Infra.Identity;
 using Ecommerce.Infra.Repositories;
@@ -23,10 +24,12 @@ public static class ServiceCollectionExtensions
 
         services.AddIdentity<ApplicationUser, IdentityRole>(options =>
         {
-            options.Password.RequireDigit = false;
-            options.Password.RequiredLength = 6;
-            options.Password.RequireUppercase = false;
-            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequiredLength = PasswordPolicy.MinLength;
+            options.Password.RequiredUniqueChars = PasswordPolicy.RequiredUniqueChars;
+            options.Password.RequireDigit = PasswordPolicy.RequireDigit;
+            options.Password.RequireLowercase = PasswordPolicy.RequireLowercase;
+            options.Password.RequireUppercase = PasswordPolicy.RequireUppercase;
+            options.Password.RequireNonAlphanumeric = PasswordPolicy.RequireNonAlphanumeric;
 
             options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
             options.Lockout.MaxFailedAccessAttempts = 5;
