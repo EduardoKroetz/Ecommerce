@@ -6,8 +6,8 @@ namespace Ecommerce.Application.Interfaces.Repositories;
 
 public interface IProductCategoryRepository
 {
-    Task<PagedResult<GetProductCategory>> SearchAsync(PaginationQuery query, CancellationToken cancellationToken = default);
-    Task<GetProductCategory?> GetDetailByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<PagedResult<ProductCategoryResponse>> SearchAsync(PaginationQuery query, CancellationToken cancellationToken = default);
+    Task<ProductCategoryResponse?> GetDetailByIdAsync(int id, CancellationToken cancellationToken = default);
 
     Task<ProductCategory?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<ProductCategory> AddAsync(ProductCategory productCategory, CancellationToken cancellationToken = default);

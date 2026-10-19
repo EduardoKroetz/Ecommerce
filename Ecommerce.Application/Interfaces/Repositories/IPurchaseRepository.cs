@@ -6,8 +6,8 @@ namespace Ecommerce.Application.Interfaces.Repositories;
 
 public interface IPurchaseRepository
 {
-    Task<PagedResult<GetPurchase>> SearchByUserIdAsync(string userId, PaginationQuery query);
-    Task<GetPurchase?> GetDetailByIdAndUserIdAsync(int id, string userId, CancellationToken cancellationToken = default);
+    Task<PagedResult<PurchaseResponse>> SearchByUserIdAsync(string userId, PaginationQuery query);
+    Task<PurchaseResponse?> GetDetailByIdAndUserIdAsync(int id, string userId, CancellationToken cancellationToken = default);
 
     Task<Purchase?> GetByIdAndUserIdAsync(int id, string userId, CancellationToken cancellationToken = default);
     Task<Purchase> AddAsync(Purchase purchase, CancellationToken cancellationToken = default);

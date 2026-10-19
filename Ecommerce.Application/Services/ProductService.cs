@@ -14,17 +14,17 @@ public class ProductService(
 {
     private int CurrentSellerId => userProvider.SellerId ?? throw new UnauthorizedException("User is not a seller.");
 
-    public async Task<PagedResult<GetProduct>> SearchAsync(GetProductsQuery query)
+    public async Task<PagedResult<ProductResponse>> SearchAsync(SearchProductsQuery query)
     {
         return await productRepository.SearchAsync(query);
     }
 
-    public async Task<GetProduct> GetByIdAsync(int id)
+    public async Task<ProductResponse> GetByIdAsync(int id)
     {
         return await productRepository.GetDetailByIdAsync(id) ?? throw new NotFoundException("Product not found.");
     }
 
-    public async Task<GetProduct> CreateAsync(UpsertProductRequest request)
+    public async Task<ProductResponse> CreateAsync(CreateProductRequest request)
     {
         var product = new Product
         {
@@ -41,7 +41,7 @@ public class ProductService(
         return await GetByIdAsync(product.Id);
     }
 
-    public async Task<GetProduct> UpdateAsync(int id, UpsertProductRequest request)
+    public async Task<ProductResponse> UpdateAsync(int id, UpdateProductRequest request)
     {
         var product = await productRepository.GetByIdAndSellerIdAsync(id, CurrentSellerId)
             ?? throw new NotFoundException("Product not found.");

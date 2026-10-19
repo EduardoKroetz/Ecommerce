@@ -1,9 +1,9 @@
 ﻿using System.Linq.Expressions;
 using Ecommerce.Domain.Entities;
 
-namespace Ecommerce.Application.DTOs.OrderItems;
+namespace Ecommerce.Application.DTOs.Orders;
 
-public class GetOrderItem
+public class OrderItemResponse
 {
     public int Id { get; set; }
     public int ProductId { get; set; }
@@ -12,7 +12,7 @@ public class GetOrderItem
     public int Quantity { get; set; }
     public decimal TotalPrice { get; set; }
 
-    public static Expression<Func<OrderItem, GetOrderItem>> MapExpression => orderItem => new GetOrderItem
+    public static Expression<Func<OrderItem, OrderItemResponse>> MapExpression => orderItem => new OrderItemResponse
     {
         Id = orderItem.Id,
         ProductId = orderItem.ProductId,

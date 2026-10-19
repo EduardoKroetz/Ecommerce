@@ -1,11 +1,11 @@
-﻿using Ecommerce.Application.DTOs.CartItems;
+﻿using Ecommerce.Application.DTOs.Carts;
 using Ecommerce.Domain.Entities;
 
 namespace Ecommerce.Application.Interfaces.Repositories;
 
 public interface ICartRepository
 {
-    Task<GetCart?> GetDetailByUserIdAsync(string userId);
+    Task<CartResponse?> GetDetailByUserIdAsync(string userId);
 
     Task<Cart?> GetByUserIdAsync(string userId);
 

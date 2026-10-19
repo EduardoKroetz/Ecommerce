@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Ecommerce.Domain.Entities;
 
-namespace Ecommerce.Application.DTOs.CartItems;
+namespace Ecommerce.Application.DTOs.Carts;
 
-public class AddToCartRequest
+public class AddCartItemRequest
 {
     public int ProductId { get; set; }
 

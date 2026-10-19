@@ -3,7 +3,7 @@ using Ecommerce.Domain.Entities;
 
 namespace Ecommerce.Application.DTOs.Products;
 
-public class UpsertProductRequest
+public class UpdateProductRequest
 {
     [Required(ErrorMessage = "Product name is required.")]
     [MaxLength(Product.NameMaxLength, ErrorMessage = "Product name cannot exceed {1} characters.")]

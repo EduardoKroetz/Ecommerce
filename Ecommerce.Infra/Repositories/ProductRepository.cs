@@ -10,7 +10,7 @@ namespace Ecommerce.Infra.Repositories;
 
 public class ProductRepository(AppDbContext dbContext) : IProductRepository
 {
-    public async Task<PagedResult<GetProduct>> SearchAsync(GetProductsQuery query, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<ProductResponse>> SearchAsync(SearchProductsQuery query, CancellationToken cancellationToken = default)
     {
         var productQuery = dbContext.Products
             .AsNoTracking()
@@ -23,24 +23,24 @@ public class ProductRepository(AppDbContext dbContext) : IProductRepository
 
         var orderedQuery = query.Sort switch
         {
-            GetProductsQuery.SortByPriceDesc => productQuery.OrderByDescending(p => p.Price),
-            GetProductsQuery.SortByNameAsc => productQuery.OrderBy(p => p.Name),
-            GetProductsQuery.SortByPriceAsc => productQuery.OrderBy(p => p.Price),
-            GetProductsQuery.SortByCreatedAtAsc => productQuery.OrderBy(p => p.CreatedAt),
+            SearchProductsQuery.SortByPriceDesc => productQuery.OrderByDescending(p => p.Price),
+            SearchProductsQuery.SortByNameAsc => productQuery.OrderBy(p => p.Name),
+            SearchProductsQuery.SortByPriceAsc => productQuery.OrderBy(p => p.Price),
+            SearchProductsQuery.SortByCreatedAtAsc => productQuery.OrderBy(p => p.CreatedAt),
             _ => productQuery.OrderByDescending(p => p.CreatedAt),
         };
 
         return await orderedQuery
             .ThenBy(p => p.Id)
-            .ToPagedResultAsync(GetProduct.MapExpression, query);
+            .ToPagedResultAsync(ProductResponse.MapExpression, query);
     }
 
-    public async Task<GetProduct?> GetDetailByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<ProductResponse?> GetDetailByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await dbContext.Products
             .AsNoTracking()
             .Where(p => p.Id == id)
-            .Select(GetProduct.MapExpression)
+            .Select(ProductResponse.MapExpression)
             .FirstOrDefaultAsync(cancellationToken);
     }
 

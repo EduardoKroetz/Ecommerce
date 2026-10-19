@@ -10,22 +10,22 @@ namespace Ecommerce.Infra.Repositories;
 
 public class ProductCategoryRepository(AppDbContext dbContext) : IProductCategoryRepository
 {
-    public async Task<PagedResult<GetProductCategory>> SearchAsync(PaginationQuery query, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<ProductCategoryResponse>> SearchAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
         var productCategoryQuery = dbContext.ProductCategories
             .AsNoTracking()
             .OrderBy(pc => pc.Name)
             .ThenBy(pc => pc.Id);
 
-        return await productCategoryQuery.ToPagedResultAsync(GetProductCategory.MapExpression, query);
+        return await productCategoryQuery.ToPagedResultAsync(ProductCategoryResponse.MapExpression, query);
     }
 
-    public async Task<GetProductCategory?> GetDetailByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<ProductCategoryResponse?> GetDetailByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await dbContext.ProductCategories
             .AsNoTracking()
             .Where(pc => pc.Id == id)
-            .Select(GetProductCategory.MapExpression)
+            .Select(ProductCategoryResponse.MapExpression)
             .FirstOrDefaultAsync(cancellationToken);
     }
 

@@ -1,4 +1,4 @@
-﻿using Ecommerce.Application.DTOs.CartItems;
+﻿using Ecommerce.Application.DTOs.Carts;
 using Ecommerce.Application.Interfaces.Repositories;
 using Ecommerce.Domain.Entities;
 using Ecommerce.Infra.Data;
@@ -8,12 +8,12 @@ namespace Ecommerce.Infra.Repositories;
 
 public class CartRepository(AppDbContext dbContext) : ICartRepository
 {
-    public async Task<GetCart?> GetDetailByUserIdAsync(string userId)
+    public async Task<CartResponse?> GetDetailByUserIdAsync(string userId)
     {
         return await dbContext.Carts
             .AsNoTracking()
             .Where(c => c.UserId == userId)
-            .Select(GetCart.MapExpression)
+            .Select(CartResponse.MapExpression)
             .FirstOrDefaultAsync();
     }
 

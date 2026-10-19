@@ -1,4 +1,4 @@
-﻿using Ecommerce.Application.DTOs.CartItems;
+﻿using Ecommerce.Application.DTOs.Carts;
 using Ecommerce.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +18,7 @@ public class CartController(CartService cartService) : ControllerBase
     }
 
     [HttpPost("items")]
-    public async Task<IActionResult> AddToCart(AddToCartRequest request)
+    public async Task<IActionResult> AddToCart(AddCartItemRequest request)
     {
         var cart = await cartService.AddToCartAsync(request);
 

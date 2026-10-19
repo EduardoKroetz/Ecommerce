@@ -3,7 +3,7 @@ using Ecommerce.Application.Policies;
 
 namespace Ecommerce.Application.DTOs.Auth;
 
-public class LoginUserRequest
+public class LoginRequest
 {
     [Required(ErrorMessage = "Email is required.")]
     [EmailAddress(ErrorMessage = "Invalid email address.")]

@@ -4,7 +4,7 @@ using Ecommerce.Domain.Entities;
 
 namespace Ecommerce.Application.DTOs.Products;
 
-public class GetProduct
+public class ProductResponse
 {
     public int Id { get; set; }
     public required string Name { get; set; }
@@ -13,10 +13,10 @@ public class GetProduct
     public int StockBalance { get; set; }
     public required DateTime CreatedAt { get; set; }
 
-    public List<GetProductCategory> Categories { get; set; } = [];
+    public List<ProductCategoryResponse> Categories { get; set; } = [];
 
-    public static Expression<Func<Product, GetProduct>> MapExpression =>
-        product => new GetProduct
+    public static Expression<Func<Product, ProductResponse>> MapExpression =>
+        product => new ProductResponse
         {
             Id = product.Id,
             Name = product.Name,
@@ -24,6 +24,6 @@ public class GetProduct
             Price = product.Price,
             StockBalance = product.StockBalance,
             CreatedAt = product.CreatedAt,
-            Categories = product.Categories.AsQueryable().Select(GetProductCategory.MapExpression).ToList()
+            Categories = product.Categories.AsQueryable().Select(ProductCategoryResponse.MapExpression).ToList()
         };
 }

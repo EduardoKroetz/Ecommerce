@@ -15,18 +15,18 @@ public class PurchaseService(
     ICurrentUserProvider userProvider,
     IUnitOfWork uow)
 {
-    public async Task<PagedResult<GetPurchase>> SearchAsync(PaginationQuery query)
+    public async Task<PagedResult<PurchaseResponse>> SearchAsync(PaginationQuery query)
     {
         return await purchaseRepository.SearchByUserIdAsync(userProvider.UserId, query);
     }
 
-    public async Task<GetPurchase> GetByIdAsync(int purchaseId)
+    public async Task<PurchaseResponse> GetByIdAsync(int purchaseId)
     {
         return await purchaseRepository.GetDetailByIdAndUserIdAsync(purchaseId, userProvider.UserId)
             ?? throw new NotFoundException("Purchase not found.");
     }
 
-    public async Task<GetPurchase> CreateAsync(CreatePurchaseRequest request)
+    public async Task<PurchaseResponse> CreateAsync(CreatePurchaseRequest request)
     {
         var userId = userProvider.UserId;
 
@@ -105,7 +105,7 @@ public class PurchaseService(
 
         await transaction.CommitAsync();
 
-        return GetPurchase.Map(purchase);
+        return PurchaseResponse.Map(purchase);
     }
 
     public async Task CancelAsync(int purchaseId)

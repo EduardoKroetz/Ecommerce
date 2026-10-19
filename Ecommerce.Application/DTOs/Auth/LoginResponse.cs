@@ -1,6 +1,6 @@
 ﻿namespace Ecommerce.Application.DTOs.Auth;
 
-public class LoginUserResponse
+public class LoginResponse
 {
     public required string Token { get; set; }
 }

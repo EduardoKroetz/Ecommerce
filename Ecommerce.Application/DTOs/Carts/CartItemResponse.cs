@@ -1,17 +1,17 @@
 ﻿using System.Linq.Expressions;
 using Ecommerce.Domain.Entities;
 
-namespace Ecommerce.Application.DTOs.CartItems;
+namespace Ecommerce.Application.DTOs.Carts;
 
-public class GetCartItem
+public class CartItemResponse
 {
     public int Id { get; set; }
     public int ProductId { get; set; }
     public required string ProductName { get; set; }
     public int Quantity { get; set; }
 
-    public static Expression<Func<CartItem, GetCartItem>> MapExpression =>
-        cartItem => new GetCartItem
+    public static Expression<Func<CartItem, CartItemResponse>> MapExpression =>
+        cartItem => new CartItemResponse
         {
             Id = cartItem.Id,
             ProductId = cartItem.ProductId,

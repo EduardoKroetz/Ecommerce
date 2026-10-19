@@ -11,7 +11,7 @@ public class AuthService(
     SellerService sellerService,
     IUnitOfWork uow)
 {
-    public async Task<LoginUserResponse> LoginAsync(LoginUserRequest request)
+    public async Task<LoginResponse> LoginAsync(LoginRequest request)
     {
         var user = await identityService.AuthenticateAsync(request.Email, request.Password);
 
@@ -19,7 +19,7 @@ public class AuthService(
 
         var token = tokenService.GenerateAccessToken(user, seller?.Id);
 
-        return new LoginUserResponse
+        return new LoginResponse
         {
             Token = token
         };

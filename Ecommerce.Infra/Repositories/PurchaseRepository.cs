@@ -10,7 +10,7 @@ namespace Ecommerce.Infra.Repositories;
 
 public class PurchaseRepository(AppDbContext dbContext) : IPurchaseRepository
 {
-    public async Task<PagedResult<GetPurchase>> SearchByUserIdAsync(string userId, PaginationQuery query)
+    public async Task<PagedResult<PurchaseResponse>> SearchByUserIdAsync(string userId, PaginationQuery query)
     {
         var purchaseQuery = dbContext.Purchases
             .AsNoTracking()
@@ -18,15 +18,15 @@ public class PurchaseRepository(AppDbContext dbContext) : IPurchaseRepository
             .OrderByDescending(p => p.CreatedAt)
             .ThenBy(p => p.Id);
 
-        return await purchaseQuery.ToPagedResultAsync(GetPurchase.MapExpression, query);
+        return await purchaseQuery.ToPagedResultAsync(PurchaseResponse.MapExpression, query);
     }
 
-    public async Task<GetPurchase?> GetDetailByIdAndUserIdAsync(int id, string userId, CancellationToken cancellationToken = default)
+    public async Task<PurchaseResponse?> GetDetailByIdAndUserIdAsync(int id, string userId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Purchases
             .AsNoTracking()
             .Where(p => p.Id == id && p.UserId == userId)
-            .Select(GetPurchase.MapExpression)
+            .Select(PurchaseResponse.MapExpression)
             .FirstOrDefaultAsync(cancellationToken);
     }
 

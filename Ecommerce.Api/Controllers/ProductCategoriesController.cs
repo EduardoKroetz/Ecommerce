@@ -31,7 +31,7 @@ public class ProductCategoriesController(ProductCategoryService productCategoryS
 
     [HttpPost]
     [Authorize(Policy = Policies.RequireSeller)]
-    public async Task<IActionResult> CreateProductCategory([FromBody] UpsertProductCategoryRequest request)
+    public async Task<IActionResult> CreateProductCategory([FromBody] CreateProductCategoryRequest request)
     {
         var productCategory = await productCategoryService.CreateAsync(request);
 
@@ -43,7 +43,7 @@ public class ProductCategoriesController(ProductCategoryService productCategoryS
 
     [HttpPut("{id}")]
     [Authorize(Policy = Policies.RequireSeller)]
-    public async Task<IActionResult> UpdateProductCategory(int id, [FromBody] UpsertProductCategoryRequest request)
+    public async Task<IActionResult> UpdateProductCategory(int id, [FromBody] UpdateProductCategoryRequest request)
     {
         var productCategory = await productCategoryService.UpdateAsync(id, request);
 

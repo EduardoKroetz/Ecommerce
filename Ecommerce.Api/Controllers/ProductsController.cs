@@ -21,7 +21,7 @@ public class ProductsController(ProductService productService) : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> GetProducts([FromQuery] GetProductsQuery query)
+    public async Task<IActionResult> GetProducts([FromQuery] SearchProductsQuery query)
     {
         var products = await productService.SearchAsync(query);
 
@@ -30,7 +30,7 @@ public class ProductsController(ProductService productService) : ControllerBase
 
     [HttpPost]
     [Authorize(Policy = Policies.RequireSeller)]
-    public async Task<IActionResult> CreateProduct([FromBody] UpsertProductRequest request)
+    public async Task<IActionResult> CreateProduct([FromBody] CreateProductRequest request)
     {
         var product = await productService.CreateAsync(request);
 
@@ -42,7 +42,7 @@ public class ProductsController(ProductService productService) : ControllerBase
 
     [HttpPut("{id}")]
     [Authorize(Policy = Policies.RequireSeller)]
-    public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpsertProductRequest request)
+    public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpdateProductRequest request)
     {
         var product = await productService.UpdateAsync(id, request);
 

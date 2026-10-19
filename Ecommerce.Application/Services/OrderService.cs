@@ -9,19 +9,19 @@ namespace Ecommerce.Application.Services;
 
 public class OrderService(IOrderRepository orderRepository, ICurrentUserProvider userProvider)
 {
-    public async Task<PagedResult<GetOrder>> SearchAsync(PaginationQuery query)
+    public async Task<PagedResult<OrderResponse>> SearchAsync(PaginationQuery query)
     {
         return await orderRepository.SearchByUserIdAsync(userProvider.UserId, query);
     }
 
-    public async Task<PagedResult<GetOrder>> SearchSellerOrdersAsync(PaginationQuery query)
+    public async Task<PagedResult<OrderResponse>> SearchSellerOrdersAsync(PaginationQuery query)
     {
         var sellerId = userProvider.SellerId ?? throw new UnauthorizedException("User is not a seller.");
 
         return await orderRepository.SearchBySellerIdAsync(sellerId, query);
     }
 
-    public async Task<GetOrder> GetByIdAsync(int orderId)
+    public async Task<OrderResponse> GetByIdAsync(int orderId)
     {
         return await orderRepository.GetDetailByIdAndUserIdOrSellerIdAsync(orderId, userProvider.UserId, userProvider.SellerId)
             ?? throw new NotFoundException("Order not found.");

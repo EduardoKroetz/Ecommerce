@@ -1,4 +1,4 @@
-﻿using Ecommerce.Application.DTOs.CartItems;
+﻿using Ecommerce.Application.DTOs.Carts;
 using Ecommerce.Application.Interfaces.Infra;
 using Ecommerce.Application.Interfaces.Repositories;
 using Ecommerce.Domain.Entities;
@@ -35,7 +35,7 @@ public class CartService(ICartRepository cartRepository, ICurrentUserProvider us
         return cart;
     }
 
-    public async Task<GetCart> GetCartDetailAsync()
+    public async Task<CartResponse> GetCartDetailAsync()
     {
         var userId = userProvider.UserId;
 
@@ -44,13 +44,13 @@ public class CartService(ICartRepository cartRepository, ICurrentUserProvider us
         {
             var cart = await CreateCartAsync();
 
-            cartDetail = GetCart.Map(cart);
+            cartDetail = CartResponse.Map(cart);
         }
 
         return cartDetail;
     }
 
-    public async Task<GetCart> AddToCartAsync(AddToCartRequest request)
+    public async Task<CartResponse> AddToCartAsync(AddCartItemRequest request)
     {
         var userId = userProvider.UserId;
 
@@ -80,7 +80,7 @@ public class CartService(ICartRepository cartRepository, ICurrentUserProvider us
         return (await cartRepository.GetDetailByUserIdAsync(userId))!;
     }
 
-    public async Task<GetCart> RemoveFromCartAsync(int productId)
+    public async Task<CartResponse> RemoveFromCartAsync(int productId)
     {
         var userId = userProvider.UserId;
 
@@ -97,10 +97,10 @@ public class CartService(ICartRepository cartRepository, ICurrentUserProvider us
         cart.Items.Remove(cartItem);
         await cartRepository.UpdateAsync(cart);
 
-        return GetCart.Map(cart);
+        return CartResponse.Map(cart);
     }
 
-    public async Task<GetCart> UpdateCartItemAsync(int productId, UpdateCartItemRequest request)
+    public async Task<CartResponse> UpdateCartItemAsync(int productId, UpdateCartItemRequest request)
     {
         var userId = userProvider.UserId;
 
@@ -117,6 +117,6 @@ public class CartService(ICartRepository cartRepository, ICurrentUserProvider us
         cartItem.SetQuantity(request.Quantity);
         await cartRepository.UpdateAsync(cart);
 
-        return GetCart.Map(cart);
+        return CartResponse.Map(cart);
     }
 }

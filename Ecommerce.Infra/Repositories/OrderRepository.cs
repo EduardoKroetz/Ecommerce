@@ -10,7 +10,7 @@ namespace Ecommerce.Infra.Repositories;
 
 public class OrderRepository(AppDbContext dbContext) : IOrderRepository
 {
-    public async Task<PagedResult<GetOrder>> SearchByUserIdAsync(string userId, PaginationQuery query)
+    public async Task<PagedResult<OrderResponse>> SearchByUserIdAsync(string userId, PaginationQuery query)
     {
         var orderQuery = dbContext.Orders
             .AsNoTracking()
@@ -18,10 +18,10 @@ public class OrderRepository(AppDbContext dbContext) : IOrderRepository
             .OrderByDescending(o => o.CreatedAt)
             .ThenBy(o => o.Id);
 
-        return await orderQuery.ToPagedResultAsync(GetOrder.MapExpression, query);
+        return await orderQuery.ToPagedResultAsync(OrderResponse.MapExpression, query);
     }
 
-    public async Task<PagedResult<GetOrder>> SearchBySellerIdAsync(int sellerId, PaginationQuery query)
+    public async Task<PagedResult<OrderResponse>> SearchBySellerIdAsync(int sellerId, PaginationQuery query)
     {
         var orderQuery = dbContext.Orders
             .AsNoTracking()
@@ -29,15 +29,15 @@ public class OrderRepository(AppDbContext dbContext) : IOrderRepository
             .OrderByDescending(o => o.CreatedAt)
             .ThenBy(o => o.Id);
 
-        return await orderQuery.ToPagedResultAsync(GetOrder.MapExpression, query);
+        return await orderQuery.ToPagedResultAsync(OrderResponse.MapExpression, query);
     }
 
-    public async Task<GetOrder?> GetDetailByIdAndUserIdOrSellerIdAsync(int id, string userId, int? sellerId, CancellationToken cancellationToken = default)
+    public async Task<OrderResponse?> GetDetailByIdAndUserIdOrSellerIdAsync(int id, string userId, int? sellerId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Orders
             .AsNoTracking()
             .Where(o => o.Id == id && (o.Purchase.UserId == userId || o.SellerId == sellerId))
-            .Select(GetOrder.MapExpression)
+            .Select(OrderResponse.MapExpression)
             .FirstOrDefaultAsync(cancellationToken);
     }
 

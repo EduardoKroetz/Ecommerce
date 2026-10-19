@@ -8,17 +8,17 @@ namespace Ecommerce.Application.Services;
 
 public class ProductCategoryService(IProductCategoryRepository productCategoryRepository)
 {
-    public async Task<PagedResult<GetProductCategory>> SearchAsync(PaginationQuery query)
+    public async Task<PagedResult<ProductCategoryResponse>> SearchAsync(PaginationQuery query)
     {
         return await productCategoryRepository.SearchAsync(query);
     }
 
-    public async Task<GetProductCategory> GetByIdAsync(int id)
+    public async Task<ProductCategoryResponse> GetByIdAsync(int id)
     {
         return await productCategoryRepository.GetDetailByIdAsync(id) ?? throw new NotFoundException("Product category not found.");
     }
 
-    public async Task<GetProductCategory> CreateAsync(UpsertProductCategoryRequest request)
+    public async Task<ProductCategoryResponse> CreateAsync(CreateProductCategoryRequest request)
     {
         var productCategory = new ProductCategory
         {
@@ -30,7 +30,7 @@ public class ProductCategoryService(IProductCategoryRepository productCategoryRe
         return await GetByIdAsync(productCategory.Id);
     }
 
-    public async Task<GetProductCategory> UpdateAsync(int id, UpsertProductCategoryRequest request)
+    public async Task<ProductCategoryResponse> UpdateAsync(int id, UpdateProductCategoryRequest request)
     {
         var productCategory = await productCategoryRepository.GetByIdAsync(id)
             ?? throw new NotFoundException("Product category not found.");
