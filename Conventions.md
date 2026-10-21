@@ -23,6 +23,8 @@
 ## Services
 - Operação repetida entre métodos públicos do mesmo service (ex.: a mesma validação em criar e
   atualizar) vai para um método privado reutilizado, nunca duplicada. Ex.: `AuthService.CreateUserAsync`.
+- Método de service com mais de 3 parâmetros recebe um objeto de entrada no lugar deles.
+  Até 3, parâmetros diretos (`CreateAsync(userId)`).
 
 ## Nomenclatura de DTOs
 
