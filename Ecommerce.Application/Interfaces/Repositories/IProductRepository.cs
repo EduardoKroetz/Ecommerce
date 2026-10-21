@@ -6,16 +6,16 @@ namespace Ecommerce.Application.Interfaces.Repositories;
 
 public interface IProductRepository
 {
-    Task<PagedResult<ProductResponse>> SearchAsync(SearchProductsQuery query, CancellationToken cancellationToken = default);
-    Task<ProductResponse?> GetDetailByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<PagedResult<ProductResponse>> SearchAsync(SearchProductsQuery query);
+    Task<ProductResponse?> GetDetailByIdAsync(int id);
 
-    Task<Product?> GetByIdForSellerAsync(int id, int sellerId, CancellationToken cancellationToken = default);
-    Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default);
-    Task<Product> UpdateAsync(Product product, CancellationToken cancellationToken = default);
-    Task DeleteAsync(Product product, CancellationToken cancellationToken = default);
+    Task<Product?> GetByIdForSellerAsync(int id, int sellerId);
+    Task<Product> AddAsync(Product product);
+    Task<Product> UpdateAsync(Product product);
+    Task DeleteAsync(Product product);
 
-    Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default);
-    Task<bool> HasOrdersAsync(int id, CancellationToken cancellationToken = default);
+    Task<bool> ExistsAsync(int id);
+    Task<bool> HasOrdersAsync(int id);
 
     Task<bool> TryDecrementStockAsync(int productId, int quantity);
 }

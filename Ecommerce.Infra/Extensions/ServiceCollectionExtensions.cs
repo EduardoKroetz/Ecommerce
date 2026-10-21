@@ -63,6 +63,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
+        services.AddScoped<ICancellationTokenProvider, CancellationTokenProvider>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddScoped<ICartRepository, CartRepository>();

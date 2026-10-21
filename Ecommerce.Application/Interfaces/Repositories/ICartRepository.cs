@@ -5,10 +5,10 @@ namespace Ecommerce.Application.Interfaces.Repositories;
 
 public interface ICartRepository
 {
-    Task<CartResponse?> GetDetailForCustomerAsync(int customerId, CancellationToken cancellationToken = default);
+    Task<CartResponse?> GetDetailForCustomerAsync(int customerId);
 
-    Task<Cart?> GetForCustomerAsync(int customerId, CancellationToken cancellationToken = default);
+    Task<Cart?> GetForCustomerAsync(int customerId);
 
-    Task<Cart> AddAsync(Cart cart, CancellationToken cancellationToken = default);
-    Task<Cart> UpdateAsync(Cart cart, CancellationToken cancellationToken = default);
+    Task<Cart> AddAsync(Cart cart);
+    Task<Cart> UpdateAsync(Cart cart);
 }
