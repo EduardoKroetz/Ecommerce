@@ -1,3 +1,9 @@
+## Terminologia
+- **User**: identidade autenticada. `UserId` só aparece na borda (Identity, JWT, `ICurrentUserProvider`).
+- **Customer**: papel de comprador. Todo usuário tem um.
+- **Seller**: papel de vendedor. Opcional.
+- Nunca usar `UserId` para representar um papel; nunca usar o termo "Buyer".
+
 ## Nomenclatura de repositórios
 - Dentro de `IXRepository`, métodos não repetem "X" (o tipo já diz): `GetById`, não `GetProductById`.
 - Leitura de item: `GetDetailByIdAsync`. Leitura de lista com filtro: `SearchAsync` / `GetListAsync`. 
@@ -7,8 +13,16 @@
 - Operações que podem falhar por uma condição esperada (não por erro) usam
   prefixo `Try` e retornam `bool`: `TryDecrementStockAsync` → true se aplicou,
   false se a condição não foi satisfeita. Segue a convenção do `TryParse` da BCL.
-- Ao compor filtros no nome, a chave primária vem primeiro, depois os
-  qualificadores: `GetDetailByIdAndUserIdAsync`, não `...ByUserIdAndId`.
+- Filtros de dados usam `By`: a chave primária vem primeiro, depois os
+  qualificadores, unidos por `And`: `GetByIdAsync`, `ExistsByNameAsync`.
+- Escopo de acesso por papel usa `For{Papel}` e vem depois dos filtros:
+  `GetByIdForCustomerAsync`, `SearchForSellerAsync`,
+  `GetDetailByIdForCustomerOrSellerAsync`. O parâmetro do papel é obrigatório.
+- Escopo de acesso nunca é expresso como filtro de coluna (`ByIdAndUserId`).
+
+## Services
+- Operação repetida entre métodos públicos do mesmo service (ex.: a mesma validação em criar e
+  atualizar) vai para um método privado reutilizado, nunca duplicada. Ex.: `AuthService.CreateUserAsync`.
 
 ## Nomenclatura de DTOs
 
