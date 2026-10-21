@@ -17,6 +17,7 @@
     <File Path="docs/adr/0009-separacao-leitura-e-escrita-no-acesso-a-dados.md" />
     <File Path="docs/adr/0010-tratamento-de-erros-via-exception.md" />
     <File Path="docs/adr/0011-identificacao-do-vendedor-via-claim-seller-id.md" />
+    <File Path="docs/adr/0012-perfis-de-papel-customer-e-seller-sobre-user.md" />
   </Folder>
   <Project Path="Ecommerce.Api/Ecommerce.Api.csproj" />
   <Project Path="Ecommerce.Application/Ecommerce.Application.csproj" />

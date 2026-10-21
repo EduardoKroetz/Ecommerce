@@ -1,7 +1,7 @@
 # 0011 - Identificação do vendedor via claim `seller_id` no JWT + policy
 
 ## Status
-Aceito
+Parcialmente substituído pelo ADR 0012 "Perfis de papel Customer e Seller sobre User"
 
 ## Contexto
 O sistema passa a operar como marketplace: entidade `Seller` vinculada 1:1 a `User` (índice único em `UserId`), com `SellerId` obrigatório em `Product` e `Order`. Pedidos são single-seller.
