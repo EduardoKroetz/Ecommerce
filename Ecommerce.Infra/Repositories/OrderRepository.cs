@@ -10,18 +10,18 @@ namespace Ecommerce.Infra.Repositories;
 
 public class OrderRepository(AppDbContext dbContext) : IOrderRepository
 {
-    public async Task<PagedResult<OrderResponse>> SearchByUserIdAsync(string userId, PaginationQuery query)
+    public async Task<PagedResult<OrderResponse>> SearchForCustomerAsync(int customerId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         var orderQuery = dbContext.Orders
             .AsNoTracking()
-            .Where(o => o.Purchase.UserId == userId)
+            .Where(o => o.Purchase.CustomerId == customerId)
             .OrderByDescending(o => o.CreatedAt)
             .ThenBy(o => o.Id);
 
-        return await orderQuery.ToPagedResultAsync(OrderResponse.MapExpression, query);
+        return await orderQuery.ToPagedResultAsync(OrderResponse.MapExpression, query, cancellationToken);
     }
 
-    public async Task<PagedResult<OrderResponse>> SearchBySellerIdAsync(int sellerId, PaginationQuery query)
+    public async Task<PagedResult<OrderResponse>> SearchForSellerAsync(int sellerId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         var orderQuery = dbContext.Orders
             .AsNoTracking()
@@ -29,38 +29,38 @@ public class OrderRepository(AppDbContext dbContext) : IOrderRepository
             .OrderByDescending(o => o.CreatedAt)
             .ThenBy(o => o.Id);
 
-        return await orderQuery.ToPagedResultAsync(OrderResponse.MapExpression, query);
+        return await orderQuery.ToPagedResultAsync(OrderResponse.MapExpression, query, cancellationToken);
     }
 
-    public async Task<OrderResponse?> GetDetailByIdAndUserIdOrSellerIdAsync(int id, string userId, int? sellerId, CancellationToken cancellationToken = default)
+    public async Task<OrderResponse?> GetDetailByIdForCustomerOrSellerAsync(int id, int customerId, int? sellerId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Orders
             .AsNoTracking()
-            .Where(o => o.Id == id && (o.Purchase.UserId == userId || o.SellerId == sellerId))
+            .Where(o => o.Id == id && (o.Purchase.CustomerId == customerId || o.SellerId == sellerId))
             .Select(OrderResponse.MapExpression)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<Order?> GetByIdAndUserIdAsync(int id, string userId, CancellationToken cancellationToken = default)
+    public async Task<Order?> GetByIdForCustomerAsync(int id, int customerId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Orders
-            .FirstOrDefaultAsync(o => o.Id == id && o.Purchase.UserId == userId, cancellationToken);
+            .FirstOrDefaultAsync(o => o.Id == id && o.Purchase.CustomerId == customerId, cancellationToken);
     }
 
-    public async Task<Order?> GetByIdAndSellerIdAsync(int id, int sellerId, CancellationToken cancellationToken = default)
+    public async Task<Order?> GetByIdForSellerAsync(int id, int sellerId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Orders
             .FirstOrDefaultAsync(o => o.Id == id && o.SellerId == sellerId, cancellationToken);
     }
 
-    public async Task<Order?> GetByIdAndUserIdOrSellerIdAsync(int id, string userId, int? sellerId, CancellationToken cancellationToken = default)
+    public async Task<Order?> GetByIdForCustomerOrSellerAsync(int id, int customerId, int? sellerId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Orders
             .Include(o => o.Items)
             .ThenInclude(oi => oi.Product)
             .Include(o => o.Purchase)
             .ThenInclude(p => p.Orders)
-            .FirstOrDefaultAsync(o => o.Id == id && (o.Purchase.UserId == userId || o.SellerId == sellerId), cancellationToken);
+            .FirstOrDefaultAsync(o => o.Id == id && (o.Purchase.CustomerId == customerId || o.SellerId == sellerId), cancellationToken);
     }
 
     public async Task<Order> UpdateAsync(Order order, CancellationToken cancellationToken = default)

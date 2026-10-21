@@ -7,10 +7,10 @@ namespace Ecommerce.Api.Controllers;
 [Route("api/[controller]")]
 public class AuthController(AuthService authService) : ControllerBase
 {
-    [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
+    [HttpPost("register/customer")]
+    public async Task<IActionResult> RegisterCustomer([FromBody] RegisterCustomerRequest request)
     {
-        var response = await authService.RegisterAsync(request);
+        var response = await authService.RegisterCustomerAsync(request);
 
         return Ok(response);
     }

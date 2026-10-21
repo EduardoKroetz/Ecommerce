@@ -17,7 +17,7 @@ public class ProductCategoryRepository(AppDbContext dbContext) : IProductCategor
             .OrderBy(pc => pc.Name)
             .ThenBy(pc => pc.Id);
 
-        return await productCategoryQuery.ToPagedResultAsync(ProductCategoryResponse.MapExpression, query);
+        return await productCategoryQuery.ToPagedResultAsync(ProductCategoryResponse.MapExpression, query, cancellationToken);
     }
 
     public async Task<ProductCategoryResponse?> GetDetailByIdAsync(int id, CancellationToken cancellationToken = default)

@@ -10,33 +10,33 @@ namespace Ecommerce.Infra.Repositories;
 
 public class PurchaseRepository(AppDbContext dbContext) : IPurchaseRepository
 {
-    public async Task<PagedResult<PurchaseResponse>> SearchByUserIdAsync(string userId, PaginationQuery query)
+    public async Task<PagedResult<PurchaseResponse>> SearchForCustomerAsync(int customerId, PaginationQuery query, CancellationToken cancellationToken = default)
     {
         var purchaseQuery = dbContext.Purchases
             .AsNoTracking()
-            .Where(p => p.UserId == userId)
+            .Where(p => p.CustomerId == customerId)
             .OrderByDescending(p => p.CreatedAt)
             .ThenBy(p => p.Id);
 
-        return await purchaseQuery.ToPagedResultAsync(PurchaseResponse.MapExpression, query);
+        return await purchaseQuery.ToPagedResultAsync(PurchaseResponse.MapExpression, query, cancellationToken);
     }
 
-    public async Task<PurchaseResponse?> GetDetailByIdAndUserIdAsync(int id, string userId, CancellationToken cancellationToken = default)
+    public async Task<PurchaseResponse?> GetDetailByIdForCustomerAsync(int id, int customerId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Purchases
             .AsNoTracking()
-            .Where(p => p.Id == id && p.UserId == userId)
+            .Where(p => p.Id == id && p.CustomerId == customerId)
             .Select(PurchaseResponse.MapExpression)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<Purchase?> GetByIdAndUserIdAsync(int id, string userId, CancellationToken cancellationToken = default)
+    public async Task<Purchase?> GetByIdForCustomerAsync(int id, int customerId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Purchases
             .Include(p => p.Orders)
             .ThenInclude(o => o.Items)
             .ThenInclude(oi => oi.Product)
-            .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == id && p.CustomerId == customerId, cancellationToken);
     }
 
     public async Task<Purchase> AddAsync(Purchase purchase, CancellationToken cancellationToken = default)

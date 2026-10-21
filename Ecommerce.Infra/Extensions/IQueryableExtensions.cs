@@ -9,15 +9,16 @@ public static class IQueryableExtensions
     public static async Task<PagedResult<TDto>> ToPagedResultAsync<TEntity, TDto>(
         this IQueryable<TEntity> query,
         Expression<Func<TEntity, TDto>> selector,
-        PaginationQuery pagination)
+        PaginationQuery pagination,
+        CancellationToken cancellationToken = default)
     {
-        var totalCount = await query.CountAsync();
+        var totalCount = await query.CountAsync(cancellationToken);
 
         var items = await query
             .Skip(pagination.Skip)
             .Take(pagination.Take)
             .Select(selector)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         return new PagedResult<TDto>(items, totalCount, pagination.PageSize, pagination.PageNumber);
     }

@@ -8,21 +8,21 @@ namespace Ecommerce.Infra.Repositories;
 
 public class CartRepository(AppDbContext dbContext) : ICartRepository
 {
-    public async Task<CartResponse?> GetDetailByUserIdAsync(string userId)
+    public async Task<CartResponse?> GetDetailForCustomerAsync(int customerId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Carts
             .AsNoTracking()
-            .Where(c => c.UserId == userId)
+            .Where(c => c.CustomerId == customerId)
             .Select(CartResponse.MapExpression)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<Cart?> GetByUserIdAsync(string userId)
+    public async Task<Cart?> GetForCustomerAsync(int customerId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Carts
             .Include(c => c.Items)
             .ThenInclude(i => i.Product)
-            .FirstOrDefaultAsync(c => c.UserId == userId);
+            .FirstOrDefaultAsync(c => c.CustomerId == customerId, cancellationToken);
     }
 
     public async Task<Cart> AddAsync(Cart cart, CancellationToken cancellationToken = default)

@@ -32,7 +32,7 @@ public class ProductRepository(AppDbContext dbContext) : IProductRepository
 
         return await orderedQuery
             .ThenBy(p => p.Id)
-            .ToPagedResultAsync(ProductResponse.MapExpression, query);
+            .ToPagedResultAsync(ProductResponse.MapExpression, query, cancellationToken);
     }
 
     public async Task<ProductResponse?> GetDetailByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -44,7 +44,7 @@ public class ProductRepository(AppDbContext dbContext) : IProductRepository
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<Product?> GetByIdAndSellerIdAsync(int id, int sellerId, CancellationToken cancellationToken = default)
+    public async Task<Product?> GetByIdForSellerAsync(int id, int sellerId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Products
             .Include(p => p.Categories)

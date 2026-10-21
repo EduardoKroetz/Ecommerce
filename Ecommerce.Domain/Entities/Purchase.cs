@@ -5,7 +5,7 @@ namespace Ecommerce.Domain.Entities;
 public class Purchase
 {
     public int Id { get; set; }
-    public required string UserId { get; set; }
+    public required int CustomerId { get; set; }
     public required decimal OriginalTotalAmount { get; set; }
     public required decimal TotalAmount { get; set; }
     public required EPaymentMethod PaymentMethod { get; set; }

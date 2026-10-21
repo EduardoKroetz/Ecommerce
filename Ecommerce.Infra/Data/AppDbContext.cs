@@ -17,6 +17,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<CartItem> CartItems { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<Customer> Customers { get; set; }
     public DbSet<Seller> Sellers { get; set; }
     public DbSet<Purchase> Purchases { get; set; }
 
@@ -52,10 +53,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<Cart>()
-           .HasOne<ApplicationUser>()
+           .HasOne<Customer>()
            .WithOne()
-           .HasForeignKey<Cart>(c => c.UserId)
-           .OnDelete(DeleteBehavior.Cascade);
+           .HasForeignKey<Cart>(c => c.CustomerId)
+           .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<CartItem>()
            .HasOne(ci => ci.Product)
@@ -104,10 +105,18 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<Purchase>()
-           .HasOne<ApplicationUser>()
+           .HasOne<Customer>()
            .WithMany()
-           .HasForeignKey(p => p.UserId)
+           .HasForeignKey(p => p.CustomerId)
            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Customer>()
+           .HasOne<ApplicationUser>()
+           .WithOne()
+           .HasForeignKey<Customer>(c => c.UserId)
+           .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Customer>().HasIndex(c => c.UserId).IsUnique();
 
         base.OnModelCreating(builder);
     }

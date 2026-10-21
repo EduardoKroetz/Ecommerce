@@ -43,7 +43,7 @@ public class ProductService(
 
     public async Task<ProductResponse> UpdateAsync(int id, UpdateProductRequest request)
     {
-        var product = await productRepository.GetByIdAndSellerIdAsync(id, CurrentSellerId)
+        var product = await productRepository.GetByIdForSellerAsync(id, CurrentSellerId)
             ?? throw new NotFoundException("Product not found.");
 
         product.Name = request.Name;
@@ -58,7 +58,7 @@ public class ProductService(
 
     public async Task DeleteAsync(int id)
     {
-        var product = await productRepository.GetByIdAndSellerIdAsync(id, CurrentSellerId)
+        var product = await productRepository.GetByIdForSellerAsync(id, CurrentSellerId)
             ?? throw new NotFoundException("Product not found.");
 
         if (await productRepository.HasOrdersAsync(id))
@@ -69,7 +69,7 @@ public class ProductService(
 
     public async Task AddCategoryAsync(int productId, int productCategoryId)
     {
-        var product = await productRepository.GetByIdAndSellerIdAsync(productId, CurrentSellerId)
+        var product = await productRepository.GetByIdForSellerAsync(productId, CurrentSellerId)
             ?? throw new NotFoundException("Product not found.");
 
         var productCategory = await productCategoryRepository.GetByIdAsync(productCategoryId)
@@ -82,7 +82,7 @@ public class ProductService(
 
     public async Task RemoveCategoryAsync(int productId, int productCategoryId)
     {
-        var product = await productRepository.GetByIdAndSellerIdAsync(productId, CurrentSellerId)
+        var product = await productRepository.GetByIdForSellerAsync(productId, CurrentSellerId)
             ?? throw new NotFoundException("Product not found.");
 
         var productCategory = await productCategoryRepository.GetByIdAsync(productCategoryId)

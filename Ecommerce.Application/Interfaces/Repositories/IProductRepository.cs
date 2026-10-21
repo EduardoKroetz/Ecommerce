@@ -9,7 +9,7 @@ public interface IProductRepository
     Task<PagedResult<ProductResponse>> SearchAsync(SearchProductsQuery query, CancellationToken cancellationToken = default);
     Task<ProductResponse?> GetDetailByIdAsync(int id, CancellationToken cancellationToken = default);
 
-    Task<Product?> GetByIdAndSellerIdAsync(int id, int sellerId, CancellationToken cancellationToken = default);
+    Task<Product?> GetByIdForSellerAsync(int id, int sellerId, CancellationToken cancellationToken = default);
     Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default);
     Task<Product> UpdateAsync(Product product, CancellationToken cancellationToken = default);
     Task DeleteAsync(Product product, CancellationToken cancellationToken = default);

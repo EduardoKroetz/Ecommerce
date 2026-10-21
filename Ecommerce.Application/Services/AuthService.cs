@@ -1,13 +1,16 @@
 using Ecommerce.Application.DTOs.Auth;
 using Ecommerce.Application.Interfaces.Infra;
 using Ecommerce.Application.Interfaces.Repositories;
+using Ecommerce.Domain.Entities;
 
 namespace Ecommerce.Application.Services;
 
 public class AuthService(
     IIdentityService identityService,
     ITokenService tokenService,
+    ICustomerRepository customerRepository,
     ISellerRepository sellerRepository,
+    CustomerService customerService,
     SellerService sellerService,
     IUnitOfWork uow)
 {
@@ -15,9 +18,13 @@ public class AuthService(
     {
         var user = await identityService.AuthenticateAsync(request.Email, request.Password);
 
+        // Every user has a customer (ADR 0012); a missing one is a broken invariant, not a client error
+        var customer = await customerRepository.GetByUserIdAsync(user.Id)
+            ?? throw new InvalidOperationException($"User '{user.Id}' has no customer.");
+
         var seller = await sellerRepository.GetByUserIdAsync(user.Id);
 
-        var token = tokenService.GenerateAccessToken(user, seller?.Id);
+        var token = tokenService.GenerateAccessToken(user, customer.Id, seller?.Id);
 
         return new LoginResponse
         {
@@ -25,15 +32,20 @@ public class AuthService(
         };
     }
 
-    public async Task<RegisterUserResponse> RegisterAsync(RegisterUserRequest request)
+    public async Task<RegisterCustomerResponse> RegisterCustomerAsync(RegisterCustomerRequest request)
     {
-        var user = await identityService.CreateUserAsync(request.Name, request.Email, request.Password);
+        await using var transaction = await uow.BeginTransactionAsync();
 
-        var token = tokenService.GenerateAccessToken(user, null);
+        var (user, customer) = await CreateUserAsync(request.Name, request.Email, request.Password);
 
-        return new RegisterUserResponse
+        await transaction.CommitAsync();
+
+        var token = tokenService.GenerateAccessToken(user, customer.Id, null);
+
+        return new RegisterCustomerResponse
         {
             UserId = user.Id,
+            CustomerId = customer.Id,
             Token = token
         };
     }
@@ -42,19 +54,30 @@ public class AuthService(
     {
         await using var transaction = await uow.BeginTransactionAsync();
 
-        var user = await identityService.CreateUserAsync(request.Name, request.Email, request.Password);
+        var (user, customer) = await CreateUserAsync(request.Name, request.Email, request.Password);
 
         var seller = await sellerService.CreateAsync(user.Id);
 
         await transaction.CommitAsync();
 
-        var token = tokenService.GenerateAccessToken(user, seller.Id);
+        var token = tokenService.GenerateAccessToken(user, customer.Id, seller.Id);
 
         return new RegisterSellerResponse
         {
             UserId = user.Id,
+            CustomerId = customer.Id,
             SellerId = seller.Id,
             Token = token
         };
+    }
+
+    // Single creation point for users: every user gets its customer. Must run inside the caller's transaction.
+    private async Task<(IUser User, Customer Customer)> CreateUserAsync(string name, string email, string password)
+    {
+        var user = await identityService.CreateUserAsync(name, email, password);
+
+        var customer = await customerService.CreateAsync(user.Id);
+
+        return (user, customer);
     }
 }

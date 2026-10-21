@@ -17,20 +17,20 @@ public class PurchaseService(
 {
     public async Task<PagedResult<PurchaseResponse>> SearchAsync(PaginationQuery query)
     {
-        return await purchaseRepository.SearchByUserIdAsync(userProvider.UserId, query);
+        return await purchaseRepository.SearchForCustomerAsync(userProvider.CustomerId, query);
     }
 
     public async Task<PurchaseResponse> GetByIdAsync(int purchaseId)
     {
-        return await purchaseRepository.GetDetailByIdAndUserIdAsync(purchaseId, userProvider.UserId)
+        return await purchaseRepository.GetDetailByIdForCustomerAsync(purchaseId, userProvider.CustomerId)
             ?? throw new NotFoundException("Purchase not found.");
     }
 
     public async Task<PurchaseResponse> CreateAsync(CreatePurchaseRequest request)
     {
-        var userId = userProvider.UserId;
+        var customerId = userProvider.CustomerId;
 
-        var cart = await cartRepository.GetByUserIdAsync(userId)
+        var cart = await cartRepository.GetForCustomerAsync(customerId)
             ?? throw new NotFoundException("Cart not found.");
 
         if (cart.Items.Count == 0)
@@ -75,7 +75,7 @@ public class PurchaseService(
 
         var purchase = new Purchase
         {
-            UserId = userId,
+            CustomerId = customerId,
             OriginalTotalAmount = totalAmount,
             TotalAmount = totalAmount,
             PaymentMethod = request.PaymentMethod!.Value,
@@ -110,7 +110,7 @@ public class PurchaseService(
 
     public async Task CancelAsync(int purchaseId)
     {
-        var purchase = await purchaseRepository.GetByIdAndUserIdAsync(purchaseId, userProvider.UserId)
+        var purchase = await purchaseRepository.GetByIdForCustomerAsync(purchaseId, userProvider.CustomerId)
             ?? throw new NotFoundException("Purchase not found.");
 
         if (purchase.Status == EPurchaseStatus.Cancelled)
@@ -133,7 +133,7 @@ public class PurchaseService(
 
     public async Task PayAsync(int purchaseId)
     {
-        var purchase = await purchaseRepository.GetByIdAndUserIdAsync(purchaseId, userProvider.UserId)
+        var purchase = await purchaseRepository.GetByIdForCustomerAsync(purchaseId, userProvider.CustomerId)
             ?? throw new NotFoundException("Purchase not found.");
 
         if (purchase.Status == EPurchaseStatus.Cancelled)

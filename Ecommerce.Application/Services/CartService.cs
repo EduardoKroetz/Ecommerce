@@ -10,11 +10,9 @@ public class CartService(ICartRepository cartRepository, ICurrentUserProvider us
 {
     private async Task<Cart> CreateCartAsync()
     {
-        var userId = userProvider.UserId;
-
         var cart = new Cart
         {
-            UserId = userId,
+            CustomerId = userProvider.CustomerId,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -24,9 +22,7 @@ public class CartService(ICartRepository cartRepository, ICurrentUserProvider us
 
     private async Task<Cart> GetOrCreateCartAsync()
     {
-        var userId = userProvider.UserId;
-
-        var cart = await cartRepository.GetByUserIdAsync(userId);
+        var cart = await cartRepository.GetForCustomerAsync(userProvider.CustomerId);
         if (cart == null)
         {
             cart = await CreateCartAsync();
@@ -37,9 +33,7 @@ public class CartService(ICartRepository cartRepository, ICurrentUserProvider us
 
     public async Task<CartResponse> GetCartDetailAsync()
     {
-        var userId = userProvider.UserId;
-
-        var cartDetail = await cartRepository.GetDetailByUserIdAsync(userId);
+        var cartDetail = await cartRepository.GetDetailForCustomerAsync(userProvider.CustomerId);
         if (cartDetail is null)
         {
             var cart = await CreateCartAsync();
@@ -52,8 +46,6 @@ public class CartService(ICartRepository cartRepository, ICurrentUserProvider us
 
     public async Task<CartResponse> AddToCartAsync(AddCartItemRequest request)
     {
-        var userId = userProvider.UserId;
-
         if (!await productRepository.ExistsAsync(request.ProductId))
             throw new NotFoundException($"Product not found.");
 
@@ -77,14 +69,12 @@ public class CartService(ICartRepository cartRepository, ICurrentUserProvider us
 
         await cartRepository.UpdateAsync(cart);
 
-        return (await cartRepository.GetDetailByUserIdAsync(userId))!;
+        return (await cartRepository.GetDetailForCustomerAsync(userProvider.CustomerId))!;
     }
 
     public async Task<CartResponse> RemoveFromCartAsync(int productId)
     {
-        var userId = userProvider.UserId;
-
-        var cart = await cartRepository.GetByUserIdAsync(userId);
+        var cart = await cartRepository.GetForCustomerAsync(userProvider.CustomerId);
         if (cart == null)
         {
             cart = await CreateCartAsync();
@@ -102,9 +92,7 @@ public class CartService(ICartRepository cartRepository, ICurrentUserProvider us
 
     public async Task<CartResponse> UpdateCartItemAsync(int productId, UpdateCartItemRequest request)
     {
-        var userId = userProvider.UserId;
-
-        var cart = await cartRepository.GetByUserIdAsync(userId);
+        var cart = await cartRepository.GetForCustomerAsync(userProvider.CustomerId);
         if (cart == null)
         {
             cart = await CreateCartAsync();

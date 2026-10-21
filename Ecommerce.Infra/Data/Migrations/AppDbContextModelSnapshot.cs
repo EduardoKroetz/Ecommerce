@@ -33,13 +33,12 @@ namespace Ecommerce.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId")
+                    b.HasIndex("CustomerId")
                         .IsUnique();
 
                     b.ToTable("Carts");
@@ -70,6 +69,26 @@ namespace Ecommerce.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("CartItems");
+                });
+
+            modelBuilder.Entity("Ecommerce.Domain.Entities.Customer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Customers");
                 });
 
             modelBuilder.Entity("Ecommerce.Domain.Entities.Order", b =>
@@ -206,6 +225,9 @@ namespace Ecommerce.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("OriginalTotalAmount")
                         .HasColumnType("numeric");
 
@@ -218,13 +240,9 @@ namespace Ecommerce.Data.Migrations
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("numeric");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("CustomerId");
 
                     b.ToTable("Purchases");
                 });
@@ -466,10 +484,10 @@ namespace Ecommerce.Data.Migrations
 
             modelBuilder.Entity("Ecommerce.Domain.Entities.Cart", b =>
                 {
-                    b.HasOne("Ecommerce.Infra.Identity.ApplicationUser", null)
+                    b.HasOne("Ecommerce.Domain.Entities.Customer", null)
                         .WithOne()
-                        .HasForeignKey("Ecommerce.Domain.Entities.Cart", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("Ecommerce.Domain.Entities.Cart", "CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -490,6 +508,15 @@ namespace Ecommerce.Data.Migrations
                     b.Navigation("Cart");
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Ecommerce.Domain.Entities.Customer", b =>
+                {
+                    b.HasOne("Ecommerce.Infra.Identity.ApplicationUser", null)
+                        .WithOne()
+                        .HasForeignKey("Ecommerce.Domain.Entities.Customer", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Ecommerce.Domain.Entities.Order", b =>
@@ -537,9 +564,9 @@ namespace Ecommerce.Data.Migrations
 
             modelBuilder.Entity("Ecommerce.Domain.Entities.Purchase", b =>
                 {
-                    b.HasOne("Ecommerce.Infra.Identity.ApplicationUser", null)
+                    b.HasOne("Ecommerce.Domain.Entities.Customer", null)
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

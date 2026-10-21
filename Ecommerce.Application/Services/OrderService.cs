@@ -11,25 +11,25 @@ public class OrderService(IOrderRepository orderRepository, ICurrentUserProvider
 {
     public async Task<PagedResult<OrderResponse>> SearchAsync(PaginationQuery query)
     {
-        return await orderRepository.SearchByUserIdAsync(userProvider.UserId, query);
+        return await orderRepository.SearchForCustomerAsync(userProvider.CustomerId, query);
     }
 
     public async Task<PagedResult<OrderResponse>> SearchSellerOrdersAsync(PaginationQuery query)
     {
         var sellerId = userProvider.SellerId ?? throw new UnauthorizedException("User is not a seller.");
 
-        return await orderRepository.SearchBySellerIdAsync(sellerId, query);
+        return await orderRepository.SearchForSellerAsync(sellerId, query);
     }
 
     public async Task<OrderResponse> GetByIdAsync(int orderId)
     {
-        return await orderRepository.GetDetailByIdAndUserIdOrSellerIdAsync(orderId, userProvider.UserId, userProvider.SellerId)
+        return await orderRepository.GetDetailByIdForCustomerOrSellerAsync(orderId, userProvider.CustomerId, userProvider.SellerId)
             ?? throw new NotFoundException("Order not found.");
     }
 
     public async Task CancelAsync(int orderId)
     {
-        var order = await orderRepository.GetByIdAndUserIdOrSellerIdAsync(orderId, userProvider.UserId, userProvider.SellerId)
+        var order = await orderRepository.GetByIdForCustomerOrSellerAsync(orderId, userProvider.CustomerId, userProvider.SellerId)
             ?? throw new NotFoundException("Order not found.");
 
         if (order.Status == EOrderStatus.Cancelled)
@@ -56,7 +56,7 @@ public class OrderService(IOrderRepository orderRepository, ICurrentUserProvider
     {
         var sellerId = userProvider.SellerId ?? throw new UnauthorizedException("User is not a seller.");
 
-        var order = await orderRepository.GetByIdAndSellerIdAsync(orderId, sellerId)
+        var order = await orderRepository.GetByIdForSellerAsync(orderId, sellerId)
             ?? throw new NotFoundException("Order not found.");
 
         if (order.Status == EOrderStatus.Cancelled)
@@ -72,7 +72,7 @@ public class OrderService(IOrderRepository orderRepository, ICurrentUserProvider
 
     public async Task ConfirmDeliveryAsync(int orderId)
     {
-        var order = await orderRepository.GetByIdAndUserIdAsync(orderId, userProvider.UserId)
+        var order = await orderRepository.GetByIdForCustomerAsync(orderId, userProvider.CustomerId)
             ?? throw new NotFoundException("Order not found.");
 
         if (order.Status == EOrderStatus.Cancelled)

@@ -3,7 +3,7 @@ using Ecommerce.Application.Policies;
 
 namespace Ecommerce.Application.DTOs.Auth;
 
-public class RegisterUserRequest
+public class RegisterCustomerRequest
 {
     [Required(ErrorMessage = "Name is required.")]
     public required string Name { get; set; }
