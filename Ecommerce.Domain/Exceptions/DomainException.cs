@@ -24,5 +24,14 @@ public enum EDomainExceptionCode
     PurchaseAlreadyCancelled,
     PurchaseCancelled,
     PurchaseAlreadyPaid,
-    CartItemQuantityExceeded
+    CartItemQuantityExceeded,
+    CartItemNotFound,
+    OrderWithoutItems,
+    PurchaseWithoutOrders,
+    PurchaseDuplicateSellerOrders,
+    ProductNameInvalid,
+    ProductDescriptionTooLong,
+    ProductPriceInvalid,
+    ProductStockInvalid,
+    ProductCategoryNotAssociated
 }

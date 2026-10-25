@@ -1,14 +1,23 @@
 ﻿namespace Ecommerce.Domain.Entities;
 
-public class OrderItem
+public class OrderItem : BaseEntity
 {
-    public int Id { get; set; }
-    public int OrderId { get; set; }
-    public required int ProductId { get; set; }
-    public required string ProductName { get; set; }
-    public required decimal UnitPrice { get; set; }
-    public required int Quantity { get; set; }
-    public required decimal TotalPrice { get; set; }
+    private OrderItem() { ProductName = null!; } // EF
 
-    public Product Product { get; set; } = null!;
+    // Snapshot of the product at purchase time (ADR 0003): price and name are frozen
+    public OrderItem(Product product, int quantity)
+    {
+        ProductId = product.Id;
+        ProductName = product.Name;
+        UnitPrice = product.Price;
+        Quantity = quantity;
+        TotalPrice = product.Price * quantity;
+    }
+
+    public int OrderId { get; private set; }
+    public int ProductId { get; private set; }
+    public string ProductName { get; private set; }
+    public decimal UnitPrice { get; private set; }
+    public int Quantity { get; private set; }
+    public decimal TotalPrice { get; private set; }
 }

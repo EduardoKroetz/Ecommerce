@@ -1,5 +1,6 @@
 using Ecommerce.Application.DTOs;
 using Ecommerce.Application.DTOs.Products;
+using Ecommerce.Application.Extensions;
 using Ecommerce.Application.Interfaces.Infra;
 using Ecommerce.Application.Interfaces.Repositories;
 using Ecommerce.Domain.Entities;
@@ -10,7 +11,8 @@ namespace Ecommerce.Application.Services;
 public class ProductService(
     IProductRepository productRepository,
     IProductCategoryRepository productCategoryRepository,
-    ICurrentUserProvider userProvider)
+    ICurrentUserProvider userProvider,
+    TimeProvider timeProvider)
 {
     private int CurrentSellerId => userProvider.SellerId ?? throw new UnauthorizedException("User is not a seller.");
 
@@ -26,15 +28,13 @@ public class ProductService(
 
     public async Task<ProductResponse> CreateAsync(CreateProductRequest request)
     {
-        var product = new Product
-        {
-            SellerId = CurrentSellerId,
-            Name = request.Name,
-            Description = request.Description,
-            Price = request.Price,
-            StockBalance = request.StockBalance,
-            CreatedAt = DateTime.UtcNow
-        };
+        var product = new Product(
+            CurrentSellerId,
+            request.Name,
+            request.Description,
+            request.Price,
+            request.StockBalance,
+            timeProvider.GetUtcDateTime());
 
         await productRepository.AddAsync(product);
 
@@ -46,12 +46,21 @@ public class ProductService(
         var product = await productRepository.GetByIdForSellerAsync(id, CurrentSellerId)
             ?? throw new NotFoundException("Product not found.");
 
-        product.Name = request.Name;
-        product.Description = request.Description;
-        product.Price = request.Price;
-        product.StockBalance = request.StockBalance;
+        product.Update(request.Name, request.Description, request.Price);
 
         await productRepository.UpdateAsync(product);
+
+        return await GetByIdAsync(id);
+    }
+
+    // Stock changes only through the atomic repository operation, never by overwriting the entity (domain-model.md)
+    public async Task<ProductResponse> AdjustStockAsync(int id, AdjustProductStockRequest request)
+    {
+        if (!await productRepository.ExistsForSellerAsync(id, CurrentSellerId))
+            throw new NotFoundException("Product not found.");
+
+        if (!await productRepository.TryAdjustStockAsync(id, request.Quantity))
+            throw new DomainException(EDomainExceptionCode.InsufficientStock, "Stock balance cannot become negative.");
 
         return await GetByIdAsync(id);
     }
@@ -75,7 +84,7 @@ public class ProductService(
         var productCategory = await productCategoryRepository.GetByIdAsync(productCategoryId)
             ?? throw new NotFoundException("Product category not found.");
 
-        product.Categories.Add(productCategory);
+        product.AddCategory(productCategory);
 
         await productRepository.UpdateAsync(product);
     }
@@ -88,10 +97,7 @@ public class ProductService(
         var productCategory = await productCategoryRepository.GetByIdAsync(productCategoryId)
             ?? throw new NotFoundException("Product category not found.");
 
-        if (!product.Categories.Any(c => c.Id == productCategoryId))
-            throw new NotFoundException("Product category is not associated with the product.");
-
-        product.Categories.Remove(productCategory);
+        product.RemoveCategory(productCategory.Id);
 
         await productRepository.UpdateAsync(product);
     }

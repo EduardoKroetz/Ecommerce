@@ -1,4 +1,5 @@
 ﻿using Ecommerce.Application.DTOs.Carts;
+using Ecommerce.Application.Extensions;
 using Ecommerce.Application.Interfaces.Infra;
 using Ecommerce.Application.Interfaces.Repositories;
 using Ecommerce.Domain.Entities;
@@ -6,105 +7,77 @@ using Ecommerce.Domain.Exceptions;
 
 namespace Ecommerce.Application.Services;
 
-public class CartService(ICartRepository cartRepository, ICurrentUserProvider userProvider, IProductRepository productRepository)
+public class CartService(
+    ICartRepository cartRepository,
+    ICurrentUserProvider userProvider,
+    IProductRepository productRepository,
+    TimeProvider timeProvider)
 {
     private async Task<Cart> CreateCartAsync()
     {
-        var cart = new Cart
-        {
-            CustomerId = userProvider.CustomerId,
-            CreatedAt = DateTime.UtcNow
-        };
+        var cart = new Cart(userProvider.CustomerId, timeProvider.GetUtcDateTime());
 
         await cartRepository.AddAsync(cart);
         return cart;
     }
 
+    // Product names come from another aggregate, so the response is always read back through the projection
+    private async Task<CartResponse> GetCurrentCartDetailAsync()
+    {
+        return await cartRepository.GetDetailForCustomerAsync(userProvider.CustomerId)
+            ?? throw new InvalidOperationException("Cart must exist at this point.");
+    }
+
     private async Task<Cart> GetOrCreateCartAsync()
     {
-        var cart = await cartRepository.GetForCustomerAsync(userProvider.CustomerId);
-        if (cart == null)
-        {
-            cart = await CreateCartAsync();
-        }
-
-        return cart;
+        return await cartRepository.GetForCustomerAsync(userProvider.CustomerId)
+            ?? await CreateCartAsync();
     }
 
     public async Task<CartResponse> GetCartDetailAsync()
     {
         var cartDetail = await cartRepository.GetDetailForCustomerAsync(userProvider.CustomerId);
-        if (cartDetail is null)
-        {
-            var cart = await CreateCartAsync();
+        if (cartDetail is not null)
+            return cartDetail;
 
-            cartDetail = CartResponse.Map(cart);
-        }
+        await CreateCartAsync();
 
-        return cartDetail;
+        return await GetCurrentCartDetailAsync();
     }
 
     public async Task<CartResponse> AddToCartAsync(AddCartItemRequest request)
     {
         if (!await productRepository.ExistsAsync(request.ProductId))
-            throw new NotFoundException($"Product not found.");
+            throw new NotFoundException("Product not found.");
 
         var cart = await GetOrCreateCartAsync();
 
-        var cartItem = cart.Items.FirstOrDefault(ci => ci.ProductId == request.ProductId);
-
-        if (cartItem != null)
-        {
-            cartItem.IncreaseQuantity(request.Quantity);
-        }
-        else
-        {
-            cartItem = new CartItem(request.ProductId, request.Quantity)
-            {
-                CartId = cart.Id
-            };
-
-            cart.Items.Add(cartItem);
-        }
+        cart.AddItem(request.ProductId, request.Quantity);
 
         await cartRepository.UpdateAsync(cart);
 
-        return (await cartRepository.GetDetailForCustomerAsync(userProvider.CustomerId))!;
+        return await GetCurrentCartDetailAsync();
     }
 
     public async Task<CartResponse> RemoveFromCartAsync(int productId)
     {
-        var cart = await cartRepository.GetForCustomerAsync(userProvider.CustomerId);
-        if (cart == null)
-        {
-            cart = await CreateCartAsync();
-        }
+        var cart = await GetOrCreateCartAsync();
 
-        var cartItem = cart.Items.FirstOrDefault(ci => ci.ProductId == productId);
-        if (cartItem == null)
-            throw new NotFoundException($"Cart item not found in cart.");
+        cart.RemoveItem(productId);
 
-        cart.Items.Remove(cartItem);
         await cartRepository.UpdateAsync(cart);
 
-        return CartResponse.Map(cart);
+        return await GetCurrentCartDetailAsync();
     }
 
     public async Task<CartResponse> UpdateCartItemAsync(int productId, UpdateCartItemRequest request)
     {
-        var cart = await cartRepository.GetForCustomerAsync(userProvider.CustomerId);
-        if (cart == null)
-        {
-            cart = await CreateCartAsync();
-        }
+        var cart = await GetOrCreateCartAsync();
 
-        var cartItem = cart.Items.FirstOrDefault(ci => ci.ProductId == productId);
-        if (cartItem == null)
-            throw new NotFoundException($"Cart item not found in cart.");
+        cart.UpdateItemQuantity(productId, request.Quantity);
 
-        cartItem.SetQuantity(request.Quantity);
         await cartRepository.UpdateAsync(cart);
 
-        return CartResponse.Map(cart);
+        return await GetCurrentCartDetailAsync();
     }
 }

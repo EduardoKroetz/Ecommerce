@@ -15,7 +15,4 @@ public class UpdateProductRequest
     [Required(ErrorMessage = "Product price is required.")]
     [Range(0.01, double.MaxValue, ErrorMessage = "Product price must be a positive value.")]
     public required decimal Price { get; set; }
-
-    [Range(0, int.MaxValue, ErrorMessage = "Stock balance must be a non-negative value.")]
-    public int StockBalance { get; set; }
 }

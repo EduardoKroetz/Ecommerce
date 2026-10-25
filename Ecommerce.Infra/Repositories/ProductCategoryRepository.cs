@@ -3,13 +3,14 @@ using Ecommerce.Application.DTOs.ProductCategories;
 using Ecommerce.Application.Interfaces.Repositories;
 using Ecommerce.Domain.Entities;
 using Ecommerce.Infra.Data;
-using Ecommerce.Infra.Services;
 using Ecommerce.Infra.Extensions;
+using Ecommerce.Infra.Projections;
+using Ecommerce.Infra.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ecommerce.Infra.Repositories;
 
-public class ProductCategoryRepository(AppDbContext dbContext, ICancellationTokenProvider cancellationTokenProvider) : IProductCategoryRepository
+internal class ProductCategoryRepository(AppDbContext dbContext, ICancellationTokenProvider cancellationTokenProvider, ProductCategoryProjections productCategoryProjections) : IProductCategoryRepository
 {
     public async Task<PagedResult<ProductCategoryResponse>> SearchAsync(PaginationQuery query)
     {
@@ -18,7 +19,7 @@ public class ProductCategoryRepository(AppDbContext dbContext, ICancellationToke
             .OrderBy(pc => pc.Name)
             .ThenBy(pc => pc.Id);
 
-        return await productCategoryQuery.ToPagedResultAsync(ProductCategoryResponse.MapExpression, query, cancellationTokenProvider.Token);
+        return await productCategoryQuery.ToPagedResultAsync(productCategoryProjections.ToResponse, query, cancellationTokenProvider.Token);
     }
 
     public async Task<ProductCategoryResponse?> GetDetailByIdAsync(int id)
@@ -26,7 +27,7 @@ public class ProductCategoryRepository(AppDbContext dbContext, ICancellationToke
         return await dbContext.ProductCategories
             .AsNoTracking()
             .Where(pc => pc.Id == id)
-            .Select(ProductCategoryResponse.MapExpression)
+            .Select(productCategoryProjections.ToResponse)
             .FirstOrDefaultAsync(cancellationTokenProvider.Token);
     }
 

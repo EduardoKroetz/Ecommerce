@@ -1,29 +1,15 @@
-﻿using System.Linq.Expressions;
-using Ecommerce.Application.DTOs.ProductCategories;
-using Ecommerce.Domain.Entities;
+﻿using Ecommerce.Application.DTOs.ProductCategories;
 
 namespace Ecommerce.Application.DTOs.Products;
 
 public class ProductResponse
 {
-    public int Id { get; set; }
+    public required int Id { get; set; }
     public required string Name { get; set; }
-    public string? Description { get; set; }
+    public required string? Description { get; set; }
     public required decimal Price { get; set; }
-    public int StockBalance { get; set; }
+    public required int StockBalance { get; set; }
     public required DateTime CreatedAt { get; set; }
 
-    public List<ProductCategoryResponse> Categories { get; set; } = [];
-
-    public static Expression<Func<Product, ProductResponse>> MapExpression =>
-        product => new ProductResponse
-        {
-            Id = product.Id,
-            Name = product.Name,
-            Description = product.Description,
-            Price = product.Price,
-            StockBalance = product.StockBalance,
-            CreatedAt = product.CreatedAt,
-            Categories = product.Categories.AsQueryable().Select(ProductCategoryResponse.MapExpression).ToList()
-        };
+    public required List<ProductCategoryResponse> Categories { get; set; }
 }

@@ -1,5 +1,6 @@
 using Ecommerce.Application.DTOs;
 using Ecommerce.Application.DTOs.Purchases;
+using Ecommerce.Application.Extensions;
 using Ecommerce.Application.Interfaces.Infra;
 using Ecommerce.Application.Interfaces.Repositories;
 using Ecommerce.Domain.Entities;
@@ -10,10 +11,12 @@ namespace Ecommerce.Application.Services;
 
 public class PurchaseService(
     IPurchaseRepository purchaseRepository,
+    IOrderRepository orderRepository,
     ICartRepository cartRepository,
     IProductRepository productRepository,
     ICurrentUserProvider userProvider,
-    IUnitOfWork uow)
+    IUnitOfWork uow,
+    TimeProvider timeProvider)
 {
     public async Task<PagedResult<PurchaseResponse>> SearchAsync(PaginationQuery query)
     {
@@ -33,60 +36,35 @@ public class PurchaseService(
         var cart = await cartRepository.GetForCustomerAsync(customerId)
             ?? throw new NotFoundException("Cart not found.");
 
-        if (cart.Items.Count == 0)
-            throw new DomainException(EDomainExceptionCode.CartEmpty, "Cart cannot be empty.");
+        cart.EnsureNotEmpty();
+
+        // Products are another aggregate: loaded by id, never through the cart item
+        var products = (await productRepository.GetListByIdsAsync(cart.Items.Select(ci => ci.ProductId)))
+            .ToDictionary(p => p.Id);
 
         var itemsWithInsufficientStock = cart.Items
-            .Where(ci => ci.Quantity > ci.Product.StockBalance)
-            .Select(ci => new { ci.ProductId, ci.Product.Name, ci.Product.StockBalance, ci.Quantity })
+            .Where(ci => ci.Quantity > products[ci.ProductId].StockBalance)
+            .Select(ci => new { ci.ProductId, products[ci.ProductId].Name, products[ci.ProductId].StockBalance, ci.Quantity })
             .ToList();
 
         if (itemsWithInsufficientStock.Count > 0)
             throw new DomainException(EDomainExceptionCode.InsufficientStock, "Some items in your cart have insufficient stock.", new { items = itemsWithInsufficientStock });
 
-        var createdAt = DateTime.UtcNow;
+        var createdAt = timeProvider.GetUtcDateTime();
 
         // One order per seller: products from the same seller share the same order
-        var orders = cart.Items
-            .GroupBy(ci => ci.Product.SellerId)
-            .Select(sellerItems =>
+        var itemsBySeller = cart.Items
+            .GroupBy(ci => products[ci.ProductId].SellerId)
+            .Select(sellerItems => new
             {
-                var orderItems = sellerItems.Select(ci => new OrderItem
-                {
-                    ProductId = ci.ProductId,
-                    ProductName = ci.Product.Name,
-                    Quantity = ci.Quantity,
-                    UnitPrice = ci.Product.Price,
-                    TotalPrice = ci.Product.Price * ci.Quantity,
-                }).ToList();
-
-                return new Order
-                {
-                    SellerId = sellerItems.Key,
-                    Status = EOrderStatus.AwaitingPayment,
-                    CreatedAt = createdAt,
-                    TotalAmount = orderItems.Sum(oi => oi.TotalPrice),
-                    Items = orderItems
-                };
+                SellerId = sellerItems.Key,
+                Items = sellerItems.Select(ci => new OrderItem(products[ci.ProductId], ci.Quantity)).ToList()
             })
             .ToList();
 
-        var totalAmount = orders.Sum(o => o.TotalAmount);
-
-        var purchase = new Purchase
-        {
-            CustomerId = customerId,
-            OriginalTotalAmount = totalAmount,
-            TotalAmount = totalAmount,
-            PaymentMethod = request.PaymentMethod!.Value,
-            Status = EPurchaseStatus.Pending,
-            CreatedAt = createdAt,
-            Orders = orders
-        };
-
         await using var transaction = await uow.BeginTransactionAsync();
 
-        foreach (var item in orders.SelectMany(o => o.Items))
+        foreach (var item in itemsBySeller.SelectMany(s => s.Items))
         {
             var stockDecrementResult = await productRepository.TryDecrementStockAsync(item.ProductId, item.Quantity);
 
@@ -98,14 +76,23 @@ public class PurchaseService(
             }
         }
 
+        var orders = itemsBySeller.Select(s => new Order(s.SellerId, s.Items, createdAt)).ToList();
+        var purchase = new Purchase(customerId, request.PaymentMethod!.Value, orders, createdAt);
+
+        // The purchase is saved first: orders reference it by id (ADR 0016)
         await purchaseRepository.AddAsync(purchase);
 
-        cart.Items.Clear();
+        foreach (var order in orders)
+            order.AssignToPurchase(purchase.Id);
+
+        await orderRepository.AddRangeAsync(orders);
+
+        cart.Clear();
         await cartRepository.UpdateAsync(cart);
 
         await transaction.CommitAsync();
 
-        return PurchaseResponse.Map(purchase);
+        return await GetByIdAsync(purchase.Id);
     }
 
     public async Task CancelAsync(int purchaseId)
@@ -113,22 +100,26 @@ public class PurchaseService(
         var purchase = await purchaseRepository.GetByIdForCustomerAsync(purchaseId, userProvider.CustomerId)
             ?? throw new NotFoundException("Purchase not found.");
 
-        if (purchase.Status == EPurchaseStatus.Cancelled)
-            throw new DomainException(EDomainExceptionCode.PurchaseAlreadyCancelled, "Purchase is already cancelled.");
+        purchase.Cancel();
 
-        if (purchase.Status == EPurchaseStatus.Paid)
-            throw new DomainException(EDomainExceptionCode.PurchaseAlreadyPaid, "Purchase cannot be cancelled after payment.");
+        var orders = await orderRepository.GetListByPurchaseIdAsync(purchase.Id);
 
-        foreach (var order in purchase.Orders.Where(o => o.Status == EOrderStatus.AwaitingPayment))
+        await using var transaction = await uow.BeginTransactionAsync();
+
+        foreach (var order in orders.Where(o => o.Status == EOrderStatus.AwaitingPayment))
         {
-            order.Status = EOrderStatus.Cancelled;
-            order.Items.ForEach(oi => oi.Product.StockBalance += oi.Quantity);
+            order.Cancel();
+
+            foreach (var item in order.Items)
+                await productRepository.IncrementStockAsync(item.ProductId, item.Quantity);
         }
 
-        purchase.Status = EPurchaseStatus.Cancelled;
-        purchase.TotalAmount = purchase.Orders.Where(o => o.Status != EOrderStatus.Cancelled).Sum(o => o.TotalAmount);
+        purchase.RecalculateTotal(orders);
 
+        await orderRepository.UpdateRangeAsync(orders);
         await purchaseRepository.UpdateAsync(purchase);
+
+        await transaction.CommitAsync();
     }
 
     public async Task PayAsync(int purchaseId)
@@ -136,17 +127,18 @@ public class PurchaseService(
         var purchase = await purchaseRepository.GetByIdForCustomerAsync(purchaseId, userProvider.CustomerId)
             ?? throw new NotFoundException("Purchase not found.");
 
-        if (purchase.Status == EPurchaseStatus.Cancelled)
-            throw new DomainException(EDomainExceptionCode.PurchaseCancelled, "Purchase is cancelled.");
+        purchase.Pay();
 
-        if (purchase.Status == EPurchaseStatus.Paid)
-            throw new DomainException(EDomainExceptionCode.PurchaseAlreadyPaid, "Purchase is already paid.");
+        var orders = await orderRepository.GetListByPurchaseIdAsync(purchase.Id);
 
-        purchase.Status = EPurchaseStatus.Paid;
+        foreach (var order in orders.Where(o => o.Status == EOrderStatus.AwaitingPayment))
+            order.MarkAsPaid();
 
-        foreach (var order in purchase.Orders.Where(o => o.Status == EOrderStatus.AwaitingPayment))
-            order.Status = EOrderStatus.AwaitingShipment;
+        await using var transaction = await uow.BeginTransactionAsync();
 
+        await orderRepository.UpdateRangeAsync(orders);
         await purchaseRepository.UpdateAsync(purchase);
+
+        await transaction.CommitAsync();
     }
 }

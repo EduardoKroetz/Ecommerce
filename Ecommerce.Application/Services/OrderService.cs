@@ -2,12 +2,16 @@
 using Ecommerce.Application.DTOs.Orders;
 using Ecommerce.Application.Interfaces.Infra;
 using Ecommerce.Application.Interfaces.Repositories;
-using Ecommerce.Domain.Enums;
 using Ecommerce.Domain.Exceptions;
 
 namespace Ecommerce.Application.Services;
 
-public class OrderService(IOrderRepository orderRepository, ICurrentUserProvider userProvider)
+public class OrderService(
+    IOrderRepository orderRepository,
+    IPurchaseRepository purchaseRepository,
+    IProductRepository productRepository,
+    ICurrentUserProvider userProvider,
+    IUnitOfWork uow)
 {
     public async Task<PagedResult<OrderResponse>> SearchAsync(PaginationQuery query)
     {
@@ -32,24 +36,26 @@ public class OrderService(IOrderRepository orderRepository, ICurrentUserProvider
         var order = await orderRepository.GetByIdForCustomerOrSellerAsync(orderId, userProvider.CustomerId, userProvider.SellerId)
             ?? throw new NotFoundException("Order not found.");
 
-        if (order.Status == EOrderStatus.Cancelled)
-            throw new DomainException(EDomainExceptionCode.OrderAlreadyCancelled, "Order is already cancelled.");
+        order.Cancel();
 
-        if (order.Status != EOrderStatus.AwaitingPayment)
-            throw new DomainException(EDomainExceptionCode.InvalidOrderStatus, "Only orders awaiting payment can be cancelled.");
+        // Purchase and its orders are loaded by id, never through the order (domain-model.md)
+        var purchase = await purchaseRepository.GetByIdAsync(order.PurchaseId)
+            ?? throw new InvalidOperationException($"Order '{order.Id}' references a missing purchase.");
 
-        order.Status = EOrderStatus.Cancelled;
+        var purchaseOrders = await orderRepository.GetListByPurchaseIdAsync(order.PurchaseId);
 
-        order.Items.ForEach(oi => oi.Product.StockBalance += oi.Quantity);
+        await using var transaction = await uow.BeginTransactionAsync();
 
-        var purchase = order.Purchase;
+        foreach (var item in order.Items)
+            await productRepository.IncrementStockAsync(item.ProductId, item.Quantity);
 
-        purchase.TotalAmount = purchase.Orders.Where(o => o.Status != EOrderStatus.Cancelled).Sum(o => o.TotalAmount);
-
-        if (purchase.Orders.All(o => o.Status == EOrderStatus.Cancelled))
-            purchase.Status = EPurchaseStatus.Cancelled;
+        purchase.RecalculateTotal(purchaseOrders);
+        purchase.CancelIfAllOrdersCancelled(purchaseOrders);
 
         await orderRepository.UpdateAsync(order);
+        await purchaseRepository.UpdateAsync(purchase);
+
+        await transaction.CommitAsync();
     }
 
     public async Task ShipAsync(int orderId)
@@ -59,13 +65,7 @@ public class OrderService(IOrderRepository orderRepository, ICurrentUserProvider
         var order = await orderRepository.GetByIdForSellerAsync(orderId, sellerId)
             ?? throw new NotFoundException("Order not found.");
 
-        if (order.Status == EOrderStatus.Cancelled)
-            throw new DomainException(EDomainExceptionCode.OrderCancelled, "Order is cancelled.");
-
-        if (order.Status != EOrderStatus.AwaitingShipment)
-            throw new DomainException(EDomainExceptionCode.InvalidOrderStatus, "Only orders awaiting shipment can be shipped.");
-
-        order.Status = EOrderStatus.Shipped;
+        order.Ship();
 
         await orderRepository.UpdateAsync(order);
     }
@@ -75,13 +75,7 @@ public class OrderService(IOrderRepository orderRepository, ICurrentUserProvider
         var order = await orderRepository.GetByIdForCustomerAsync(orderId, userProvider.CustomerId)
             ?? throw new NotFoundException("Order not found.");
 
-        if (order.Status == EOrderStatus.Cancelled)
-            throw new DomainException(EDomainExceptionCode.OrderCancelled, "Order is cancelled.");
-
-        if (order.Status != EOrderStatus.Shipped)
-            throw new DomainException(EDomainExceptionCode.InvalidOrderStatus, "Only shipped orders can be confirmed as delivered.");
-
-        order.Status = EOrderStatus.Delivered;
+        order.ConfirmDelivery();
 
         await orderRepository.UpdateAsync(order);
     }

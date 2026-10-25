@@ -3,13 +3,14 @@ using Ecommerce.Application.DTOs.Purchases;
 using Ecommerce.Application.Interfaces.Repositories;
 using Ecommerce.Domain.Entities;
 using Ecommerce.Infra.Data;
-using Ecommerce.Infra.Services;
 using Ecommerce.Infra.Extensions;
+using Ecommerce.Infra.Projections;
+using Ecommerce.Infra.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ecommerce.Infra.Repositories;
 
-public class PurchaseRepository(AppDbContext dbContext, ICancellationTokenProvider cancellationTokenProvider) : IPurchaseRepository
+internal class PurchaseRepository(AppDbContext dbContext, ICancellationTokenProvider cancellationTokenProvider, PurchaseProjections purchaseProjections) : IPurchaseRepository
 {
     public async Task<PagedResult<PurchaseResponse>> SearchForCustomerAsync(int customerId, PaginationQuery query)
     {
@@ -19,7 +20,7 @@ public class PurchaseRepository(AppDbContext dbContext, ICancellationTokenProvid
             .OrderByDescending(p => p.CreatedAt)
             .ThenBy(p => p.Id);
 
-        return await purchaseQuery.ToPagedResultAsync(PurchaseResponse.MapExpression, query, cancellationTokenProvider.Token);
+        return await purchaseQuery.ToPagedResultAsync(purchaseProjections.ToResponse, query, cancellationTokenProvider.Token);
     }
 
     public async Task<PurchaseResponse?> GetDetailByIdForCustomerAsync(int id, int customerId)
@@ -27,16 +28,19 @@ public class PurchaseRepository(AppDbContext dbContext, ICancellationTokenProvid
         return await dbContext.Purchases
             .AsNoTracking()
             .Where(p => p.Id == id && p.CustomerId == customerId)
-            .Select(PurchaseResponse.MapExpression)
+            .Select(purchaseProjections.ToResponse)
             .FirstOrDefaultAsync(cancellationTokenProvider.Token);
+    }
+
+    public async Task<Purchase?> GetByIdAsync(int id)
+    {
+        return await dbContext.Purchases
+            .FirstOrDefaultAsync(p => p.Id == id, cancellationTokenProvider.Token);
     }
 
     public async Task<Purchase?> GetByIdForCustomerAsync(int id, int customerId)
     {
         return await dbContext.Purchases
-            .Include(p => p.Orders)
-            .ThenInclude(o => o.Items)
-            .ThenInclude(oi => oi.Product)
             .FirstOrDefaultAsync(p => p.Id == id && p.CustomerId == customerId, cancellationTokenProvider.Token);
     }
 

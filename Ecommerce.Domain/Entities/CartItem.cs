@@ -2,30 +2,29 @@
 
 namespace Ecommerce.Domain.Entities;
 
-public class CartItem
+// Part of the Cart aggregate: created and changed only through Cart
+public class CartItem : BaseEntity
 {
     public const int MaxQuantity = 9999;
 
-    // Used by EF Core when materializing; skips the quantity validation for rows already persisted
-    private CartItem()
-    {
-    }
+    private CartItem() { } // EF
 
-    public CartItem(int productId, int quantity)
+    internal CartItem(int productId, int quantity)
     {
         ProductId = productId;
         SetQuantity(quantity);
     }
 
-    public int Id { get; set; }
-    public int CartId { get; set; }
-    public int ProductId { get; set; }
+    public int CartId { get; private set; }
+    public int ProductId { get; private set; }
     public int Quantity { get; private set; }
 
-    public Product Product { get; set; } = null!;
-    public Cart Cart { get; set; } = null!;
+    public Cart Cart { get; private set; } = null!;
 
-    public void IncreaseQuantity(int quantity)
+    // Cross-aggregate navigation: Infra queries only, never commands or entity methods (domain-model.md)
+    internal Product Product { get; private set; } = null!;
+
+    internal void IncreaseQuantity(int quantity)
     {
         // Compared as a subtraction so the sum can never overflow int
         if (quantity > MaxQuantity - Quantity)
@@ -34,7 +33,7 @@ public class CartItem
         Quantity += quantity;
     }
 
-    public void SetQuantity(int quantity)
+    internal void SetQuantity(int quantity)
     {
         if (quantity > MaxQuantity)
             throw QuantityExceeded();

@@ -1,9 +1,8 @@
 ﻿namespace Ecommerce.Domain.Entities;
 
-public class ProductCategory
+public class ProductCategory : BaseEntity
 {
     public const int NameMaxLength = 100;
 
-    public int Id { get; set; }
     public required string Name { get; set; }
 }

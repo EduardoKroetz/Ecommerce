@@ -49,6 +49,15 @@ public class ProductsController(ProductService productService) : ControllerBase
         return Ok(product);
     }
 
+    [HttpPatch("{id}/stock")]
+    [Authorize(Policy = Policies.RequireSeller)]
+    public async Task<IActionResult> AdjustProductStock(int id, [FromBody] AdjustProductStockRequest request)
+    {
+        var product = await productService.AdjustStockAsync(id, request);
+
+        return Ok(product);
+    }
+
     [HttpDelete("{id}")]
     [Authorize(Policy = Policies.RequireSeller)]
     public async Task<IActionResult> DeleteProduct(int id)

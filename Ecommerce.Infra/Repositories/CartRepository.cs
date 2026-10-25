@@ -2,19 +2,20 @@
 using Ecommerce.Application.Interfaces.Repositories;
 using Ecommerce.Domain.Entities;
 using Ecommerce.Infra.Data;
+using Ecommerce.Infra.Projections;
 using Ecommerce.Infra.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ecommerce.Infra.Repositories;
 
-public class CartRepository(AppDbContext dbContext, ICancellationTokenProvider cancellationTokenProvider) : ICartRepository
+internal class CartRepository(AppDbContext dbContext, ICancellationTokenProvider cancellationTokenProvider, CartProjections cartProjections) : ICartRepository
 {
     public async Task<CartResponse?> GetDetailForCustomerAsync(int customerId)
     {
         return await dbContext.Carts
             .AsNoTracking()
             .Where(c => c.CustomerId == customerId)
-            .Select(CartResponse.MapExpression)
+            .Select(cartProjections.ToResponse)
             .FirstOrDefaultAsync(cancellationTokenProvider.Token);
     }
 
@@ -22,7 +23,6 @@ public class CartRepository(AppDbContext dbContext, ICancellationTokenProvider c
     {
         return await dbContext.Carts
             .Include(c => c.Items)
-            .ThenInclude(i => i.Product)
             .FirstOrDefaultAsync(c => c.CustomerId == customerId, cancellationTokenProvider.Token);
     }
 
@@ -39,6 +39,4 @@ public class CartRepository(AppDbContext dbContext, ICancellationTokenProvider c
         await dbContext.SaveChangesAsync();
         return cart;
     }
-
-
 }

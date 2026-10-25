@@ -58,6 +58,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
            .HasForeignKey<Cart>(c => c.CustomerId)
            .OnDelete(DeleteBehavior.Restrict);
 
+        // Cross-aggregate navigations are internal: configured explicitly, never discovered by convention
         builder.Entity<CartItem>()
            .HasOne(ci => ci.Product)
            .WithMany()
@@ -73,7 +74,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<OrderItem>()
-           .HasOne(oi => oi.Product)
+           .HasOne<Product>()
            .WithMany()
            .HasForeignKey(oi => oi.ProductId)
            .OnDelete(DeleteBehavior.Restrict);
@@ -98,11 +99,16 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
            .HasForeignKey(o => o.SellerId)
            .OnDelete(DeleteBehavior.Restrict);
 
-        builder.Entity<Purchase>()
-           .HasMany(p => p.Orders)
-           .WithOne(o => o.Purchase)
+        builder.Entity<Order>()
+           .HasOne(o => o.Purchase)
+           .WithMany(p => p.Orders)
            .HasForeignKey(o => o.PurchaseId)
            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Purchase>()
+           .Navigation(p => p.Orders)
+           .HasField("_orders")
+           .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         builder.Entity<Purchase>()
            .HasOne<Customer>()

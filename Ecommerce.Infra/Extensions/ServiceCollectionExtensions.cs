@@ -4,6 +4,7 @@ using Ecommerce.Application.Interfaces.Repositories;
 using Ecommerce.Application.Policies;
 using Ecommerce.Infra.Data;
 using Ecommerce.Infra.Identity;
+using Ecommerce.Infra.Projections;
 using Ecommerce.Infra.Repositories;
 using Ecommerce.Infra.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -59,12 +60,19 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddHttpContextAccessor();
+        services.AddSingleton(TimeProvider.System);
 
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
         services.AddScoped<ICancellationTokenProvider, CancellationTokenProvider>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        services.AddScoped<OrderProjections>();
+        services.AddScoped<PurchaseProjections>();
+        services.AddScoped<CartProjections>();
+        services.AddScoped<ProductCategoryProjections>();
+        services.AddScoped<ProductProjections>();
 
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();

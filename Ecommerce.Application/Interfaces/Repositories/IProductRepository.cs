@@ -8,6 +8,7 @@ public interface IProductRepository
 {
     Task<PagedResult<ProductResponse>> SearchAsync(SearchProductsQuery query);
     Task<ProductResponse?> GetDetailByIdAsync(int id);
+    Task<List<Product>> GetListByIdsAsync(IEnumerable<int> ids);
 
     Task<Product?> GetByIdForSellerAsync(int id, int sellerId);
     Task<Product> AddAsync(Product product);
@@ -15,7 +16,11 @@ public interface IProductRepository
     Task DeleteAsync(Product product);
 
     Task<bool> ExistsAsync(int id);
+    Task<bool> ExistsForSellerAsync(int id, int sellerId);
     Task<bool> HasOrdersAsync(int id);
 
+    // Stock only changes through these atomic operations (domain-model.md)
     Task<bool> TryDecrementStockAsync(int productId, int quantity);
+    Task IncrementStockAsync(int productId, int quantity);
+    Task<bool> TryAdjustStockAsync(int productId, int quantity);
 }

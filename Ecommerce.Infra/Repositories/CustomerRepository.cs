@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Ecommerce.Infra.Repositories;
 
-public class CustomerRepository(AppDbContext dbContext, ICancellationTokenProvider cancellationTokenProvider) : ICustomerRepository
+internal class CustomerRepository(AppDbContext dbContext, ICancellationTokenProvider cancellationTokenProvider) : ICustomerRepository
 {
     public async Task<Customer?> GetByUserIdAsync(string userId)
     {

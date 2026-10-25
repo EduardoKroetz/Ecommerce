@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Ecommerce.Application.Extensions;
 using Ecommerce.Application.Interfaces.Infra;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -13,8 +14,9 @@ public class JwtTokenService : ITokenService
     private readonly string _jwtIssuer;
     private readonly string _jwtAudience;
     private readonly double _expiryInMinutes;
+    private readonly TimeProvider _timeProvider;
 
-    public JwtTokenService(IConfiguration configuration)
+    public JwtTokenService(IConfiguration configuration, TimeProvider timeProvider)
     {
         var jwtIssuer = configuration["Jwt:Issuer"] ?? throw new ArgumentNullException("JWT Issuer is not configured.");
         var jwtAudience = configuration["Jwt:Audience"] ?? throw new ArgumentNullException("JWT Audience is not configured.");
@@ -25,6 +27,7 @@ public class JwtTokenService : ITokenService
         _jwtIssuer = jwtIssuer;
         _jwtAudience = jwtAudience;
         _expiryInMinutes = double.Parse(expires);
+        _timeProvider = timeProvider;
     }
 
     public string GenerateAccessToken(IUser user, int customerId, int? sellerId)
@@ -45,7 +48,7 @@ public class JwtTokenService : ITokenService
             issuer: _jwtIssuer,
             audience: _jwtAudience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(_expiryInMinutes),
+            expires: _timeProvider.GetUtcDateTime().AddMinutes(_expiryInMinutes),
             signingCredentials: creds
         );
 

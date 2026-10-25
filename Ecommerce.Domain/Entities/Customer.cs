@@ -1,7 +1,6 @@
 namespace Ecommerce.Domain.Entities;
 
-public class Customer
+public class Customer : BaseEntity
 {
-    public int Id { get; set; }
     public required string UserId { get; set; }
 }

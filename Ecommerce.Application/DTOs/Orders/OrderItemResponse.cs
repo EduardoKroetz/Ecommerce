@@ -1,24 +1,11 @@
-﻿using System.Linq.Expressions;
-using Ecommerce.Domain.Entities;
-
-namespace Ecommerce.Application.DTOs.Orders;
+﻿namespace Ecommerce.Application.DTOs.Orders;
 
 public class OrderItemResponse
 {
-    public int Id { get; set; }
-    public int ProductId { get; set; }
-    public string ProductName { get; set; } = null!;
-    public decimal UnitPrice { get; set; }
-    public int Quantity { get; set; }
-    public decimal TotalPrice { get; set; }
-
-    public static Expression<Func<OrderItem, OrderItemResponse>> MapExpression => orderItem => new OrderItemResponse
-    {
-        Id = orderItem.Id,
-        ProductId = orderItem.ProductId,
-        ProductName = orderItem.ProductName,
-        UnitPrice = orderItem.UnitPrice,
-        Quantity = orderItem.Quantity,
-        TotalPrice = orderItem.TotalPrice
-    };
+    public required int Id { get; set; }
+    public required int ProductId { get; set; }
+    public required string ProductName { get; set; }
+    public required decimal UnitPrice { get; set; }
+    public required int Quantity { get; set; }
+    public required decimal TotalPrice { get; set; }
 }

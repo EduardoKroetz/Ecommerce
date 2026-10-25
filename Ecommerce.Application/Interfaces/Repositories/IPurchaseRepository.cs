@@ -9,6 +9,7 @@ public interface IPurchaseRepository
     Task<PagedResult<PurchaseResponse>> SearchForCustomerAsync(int customerId, PaginationQuery query);
     Task<PurchaseResponse?> GetDetailByIdForCustomerAsync(int id, int customerId);
 
+    Task<Purchase?> GetByIdAsync(int id);
     Task<Purchase?> GetByIdForCustomerAsync(int id, int customerId);
     Task<Purchase> AddAsync(Purchase purchase);
     Task<Purchase> UpdateAsync(Purchase purchase);
