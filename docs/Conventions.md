@@ -1,9 +1,3 @@
-## Terminologia
-- **User**: identidade autenticada. `UserId` só aparece na borda (Identity, JWT, `ICurrentUserProvider`).
-- **Customer**: papel de comprador. Todo usuário tem um.
-- **Seller**: papel de vendedor. Opcional.
-- Nunca usar `UserId` para representar um papel; nunca usar o termo "Buyer".
-
 ## Nomenclatura de repositórios
 - Dentro de `IXRepository`, métodos não repetem "X" (o tipo já diz): `GetById`, não `GetProductById`.
 - Leitura de item: `GetDetailByIdAsync`. Leitura de lista com filtro: `SearchAsync` / `GetListAsync`. 
@@ -20,11 +14,23 @@
   `GetDetailByIdForCustomerOrSellerAsync`. O parâmetro do papel é obrigatório.
 - Escopo de acesso nunca é expresso como filtro de coluna (`ByIdAndUserId`).
 
+## Entidades
+- Todas herdam `BaseEntity` (`Id`). Rica ou anêmica conforme o ADR 0014. Critérios de agregado, de valores derivados e de onde cada regra mora: docs/domain-model.md.
+- Rica (tem invariante): todas as propriedades com `private set`; mudanças só por construtor ou método.
+  Entidades ricas têm um construtor private sem parâmetros, exclusivo do EF, marcado com o comentário `// EF`.
+  Coleções expostas como `IReadOnlyCollection<T>` sobre um campo `private readonly List<T> _nome`.
+- Anêmica (CRUD puro): setters públicos.
+- Várias propriedades sem regra própria mudam juntas por um único `Update(...)`. Não criar um método por
+  propriedade (`UpdateName`, `UpdateDescription`) só para validar; método dedicado só quando a mudança
+  tem regra própria (`IncreaseStock`, `Cancel`).
+
 ## Services
 - Operação repetida entre métodos públicos do mesmo service (ex.: a mesma validação em criar e
   atualizar) vai para um método privado reutilizado, nunca duplicada. Ex.: `AuthService.CreateUserAsync`.
 - Método de service com mais de 3 parâmetros recebe um objeto de entrada no lugar deles.
   Até 3, parâmetros diretos (`CreateAsync(userId)`).
+- Data atual vem do `TimeProvider` injetado, via `timeProvider.GetUtcDateTime()` (extensão em
+  `Application/Extensions`). Nunca `DateTime.UtcNow`. O service passa a data pronta para a entidade.
 
 ## Nomenclatura de DTOs
 

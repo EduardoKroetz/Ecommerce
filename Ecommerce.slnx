@@ -1,6 +1,6 @@
 <Solution>
   <Folder Name="/Solution Items/">
-    <File Path="Conventions.md" />
+    <File Path="docs/Conventions.md" />
     <File Path="docker-compose.yml" />
     <File Path="README.md" />
   </Folder>
@@ -19,6 +19,10 @@
     <File Path="docs/adr/0011-identificacao-do-vendedor-via-claim-seller-id.md" />
     <File Path="docs/adr/0012-perfis-de-papel-customer-e-seller-sobre-user.md" />
     <File Path="docs/adr/0013-cancellation-token-via-provider-nas-leituras.md" />
+    <File Path="docs/adr/0014-dominio-rico-em-entidades-com-invariantes.md" />
+    <File Path="docs/adr/0015-ddd-tatico-leve-agregados-como-fronteira-de-consistencia.md" />
+    <File Path="docs/adr/0016-navegacoes-entre-agregados-internal-e-projecoes-na-infra.md" />
+    <File Path="docs/adr/0017-relacao-entre-purchase-e-order.md" />
   </Folder>
   <Project Path="Ecommerce.Api/Ecommerce.Api.csproj" />
   <Project Path="Ecommerce.Application/Ecommerce.Application.csproj" />
