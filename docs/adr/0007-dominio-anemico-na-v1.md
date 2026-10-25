@@ -1,7 +1,7 @@
 # 0007 - Domínio anêmico na v1 (lógica de negócio no controller)
 
 ## Status
-Aceito
+Substituído pelo ADR [0014](0014-dominio-rico-em-entidades-com-invariantes.md)
 
 ## Contexto
 O cálculo do total do pedido e a baixa de estoque são regras de negócio. 
