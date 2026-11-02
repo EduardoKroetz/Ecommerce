@@ -1,7 +1,7 @@
 ## Nomenclatura de repositórios
 - Dentro de `IXRepository`, métodos não repetem "X" (o tipo já diz): `GetById`, não `GetProductById`.
 - Leitura de item: `GetDetailByIdAsync`. Leitura de lista com filtro: `SearchAsync` / `GetListAsync`. 
-- Escrita de domínio: `GetByIdAsync`, `AddAsync`, `UpdateAsync`, `DeleteAsync` (recebem/retornam entidade).
+- Escrita de domínio: `GetByIdAsync`, `Add`, `AddRange`, `Delete` (recebem/retornam entidade). `Add`, `AddRange` e `Delete` são síncronos: só registram a alteração, sem I/O.
 - Validação de existência: `ExistsByNameAsync`.
 - Operação em lote sem regra: prefixo `Bulk` + verbo de intenção (`BulkAssignCategoryAsync`).
 - Operações que podem falhar por uma condição esperada (não por erro) usam
@@ -13,6 +13,12 @@
   `GetByIdForCustomerAsync`, `SearchForSellerAsync`,
   `GetDetailByIdForCustomerOrSellerAsync`. O parâmetro do papel é obrigatório.
 - Escopo de acesso nunca é expresso como filtro de coluna (`ByIdAndUserId`).
+
+## Gravação e tracking
+- Repositório não salva: o service chama `uow.SaveChangesAsync()` (ADR 0020). Única exceção: `UserManager.CreateAsync`, que salva por conta própria.
+- Sem `Update()`/`UpdateRange()`: entidades carregadas com tracking são gravadas pelo `SaveChanges`, só nas colunas alteradas.
+- Métodos que carregam entidade para alterar nunca usam `AsNoTracking`: a alteração não seria gravada e a versão de concorrência não seria checada (ADR 0019).
+- `AsNoTracking` é para leitura: projeções e entidades só consultadas, como `ProductRepository.GetListByIdsAsync`.
 
 ## Entidades
 - Todas herdam `BaseEntity` (`Id`). Rica ou anêmica conforme o ADR 0014. Critérios de agregado, de valores derivados e de onde cada regra mora: docs/domain-model.md.

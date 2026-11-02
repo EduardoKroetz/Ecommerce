@@ -27,8 +27,7 @@ Purchase e Order são agregados separados ([0015](0015-ddd-tatico-leve-agregados
 - ➕ "Um pedido por vendedor" passa a ser garantido pelo domínio.
 - ➖ O Order existe brevemente sem compra; o vínculo é garantido pelo `AssignToPurchase` e pela FK obrigatória.
 - ➖ A Purchase confia nos Orders recebidos; a correspondência com o carrinho é responsabilidade do service.
-- ➖ Sem concorrência otimista na Purchase, cancelamentos simultâneos de pedidos da mesma compra podem gravar um `TotalAmount` incorreto.
+- ➖ Cancelamentos simultâneos de pedidos da mesma compra geram conflito na Purchase: o segundo recebe 409 e precisa repetir ([0019](0019-concorrencia-otimista-nas-transicoes-de-status.md)).
 
 ## Gatilho de revisão
-- Concorrência otimista implementada: aplicar na Purchase.
 - Criação da compra ganhar mais regras (cupom, frete): extrair uma factory no domínio.

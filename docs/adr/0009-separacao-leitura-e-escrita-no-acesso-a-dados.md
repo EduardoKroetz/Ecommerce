@@ -19,7 +19,7 @@ Aplicar CQRS leve (sem buses, handlers ou bancos separados — apenas a
 separação de modelos):
 
 - **Escrita / operação com regra** → métodos retornam e recebem a **entidade**,
-  passando pelo domínio. Ex: `GetByIdAsync → Product`, `UpdateAsync(Product)`.
+  passando pelo domínio. Ex: `GetByIdAsync → Product`, `Add(Product)`.
 - **Leitura para exibir** → métodos retornam **DTO projetado** via Expression,
   direto do banco, sem carregar a entidade nem usar `.Include`. Ex:
   `GetDetailByIdAsync → ProductDetailDto`, `SearchAsync(query) → PagedResult<...>`.

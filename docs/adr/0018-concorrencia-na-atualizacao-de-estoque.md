@@ -29,7 +29,7 @@ O estoque só muda por comandos atômicos relativos. Nenhum fluxo grava um saldo
 - ➖ Passa por fora do `SaveChanges`: um `Product` em memória fica desatualizado, e auditoria ou eventos não rodam.
 - ➖ "Zero linhas" não distingue produto inexistente de estoque insuficiente: a mensagem é enganosa se o produto for excluído entre a carga e o decremento.
 - ➖ O lock no produto dura até o commit, depois dos inserts de Purchase, Order e Cart.
-- ➖ O incremento atômico não impede devolver em dobro: isso depende do controle de concorrência nas transições de status, ainda não implementado.
+- ➖ O incremento atômico não impede devolver em dobro: isso depende da concorrência otimista nas transições de status ([0019](0019-concorrencia-otimista-nas-transicoes-de-status.md)).
 
 ## Gatilho de revisão
 - A regra de estoque deixar de caber em SQL (reserva com expiração, kits): migrar para lock pessimista.

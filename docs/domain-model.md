@@ -91,7 +91,7 @@ Regras para valores desnormalizados:
 
 | Valor | Calculado por | Pontos de escrita | Pendência |
 |---|---|---|---|
-| `Purchase.TotalAmount` (soma dos pedidos não cancelados) | Construtor da `Purchase` (checkout, também congela o `OriginalTotalAmount`) e `Purchase.RecalculateTotal(orders)` | Checkout, cancelamento de pedido, cancelamento de compra | Sem concorrência otimista na Purchase, cancelamentos simultâneos de pedidos da mesma compra podem gravar um total incorreto |
+| `Purchase.TotalAmount` (soma dos pedidos não cancelados) | Construtor da `Purchase` (checkout, também congela o `OriginalTotalAmount`) e `Purchase.RecalculateTotal(orders)` | Checkout, cancelamento de pedido, cancelamento de compra | — |
 
 ---
 

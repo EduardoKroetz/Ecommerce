@@ -25,6 +25,8 @@
     <File Path="docs/adr/0016-navegacoes-entre-agregados-internal-e-projecoes-na-infra.md" />
     <File Path="docs/adr/0017-relacao-entre-purchase-e-order.md" />
     <File Path="docs/adr/0018-concorrencia-na-atualizacao-de-estoque.md" />
+    <File Path="docs/adr/0019-concorrencia-otimista-nas-transicoes-de-status.md" />
+    <File Path="docs/adr/0020-unit-of-work-como-ponto-unico-de-gravacao.md" />
   </Folder>
   <Project Path="Ecommerce.Api/Ecommerce.Api.csproj" />
   <Project Path="Ecommerce.Application/Ecommerce.Application.csproj" />
