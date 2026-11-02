@@ -193,7 +193,10 @@ namespace Ecommerce.Data.Migrations
 
                     b.HasIndex("SellerId");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", t =>
+                        {
+                            t.HasCheckConstraint("CK_Products_StockBalance_NonNegative", "\"StockBalance\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Ecommerce.Domain.Entities.ProductCategory", b =>
@@ -544,13 +547,11 @@ namespace Ecommerce.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Ecommerce.Domain.Entities.Product", "Product")
+                    b.HasOne("Ecommerce.Domain.Entities.Product", null)
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("Ecommerce.Domain.Entities.Product", b =>

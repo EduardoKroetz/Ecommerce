@@ -41,6 +41,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
            .Property(p => p.Description)
            .HasMaxLength(Product.DescriptionMaxLength);
 
+        // Safety net: stock is guarded by the atomic operations in the repository (ADR 0018)
+        builder.Entity<Product>()
+           .ToTable(t => t.HasCheckConstraint("CK_Products_StockBalance_NonNegative", "\"StockBalance\" >= 0"));
+
         builder.Entity<ProductCategory>()
            .Property(pc => pc.Name)
            .HasMaxLength(ProductCategory.NameMaxLength)
