@@ -128,6 +128,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<Customer>().HasIndex(c => c.UserId).IsUnique();
 
+        // Optimistic concurrency on status transitions: Npgsql maps these shadow properties to the xmin system column (ADR 0019)
+        builder.Entity<Order>().Property<uint>("Version").IsRowVersion();
+        builder.Entity<Purchase>().Property<uint>("Version").IsRowVersion();
+
         base.OnModelCreating(builder);
     }
 }

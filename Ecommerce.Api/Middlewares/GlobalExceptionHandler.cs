@@ -1,6 +1,7 @@
 using Ecommerce.Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Ecommerce.Api.Middlewares;
 
@@ -21,6 +22,7 @@ public class GlobalExceptionHandler(IProblemDetailsService problemDetailsService
             }),
             NotFoundException => CreateProblemDetails(StatusCodes.Status404NotFound, exception.Message),
             ConflictException => CreateProblemDetails(StatusCodes.Status409Conflict, exception.Message),
+            DbUpdateConcurrencyException => CreateProblemDetails(StatusCodes.Status409Conflict, "The resource was changed by another request. Reload it and try again."),
             UnauthorizedException => CreateProblemDetails(StatusCodes.Status401Unauthorized, exception.Message),
             _ => null
         };
