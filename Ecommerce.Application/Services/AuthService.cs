@@ -38,6 +38,8 @@ public class AuthService(
 
         var (user, customer) = await CreateUserAsync(request.Name, request.Email, request.Password);
 
+        await uow.SaveChangesAsync();
+
         await transaction.CommitAsync();
 
         var token = tokenService.GenerateAccessToken(user, customer.Id, null);
@@ -56,7 +58,9 @@ public class AuthService(
 
         var (user, customer) = await CreateUserAsync(request.Name, request.Email, request.Password);
 
-        var seller = await sellerService.CreateAsync(user.Id);
+        var seller = sellerService.Create(user.Id);
+
+        await uow.SaveChangesAsync();
 
         await transaction.CommitAsync();
 
@@ -74,9 +78,10 @@ public class AuthService(
     // Single creation point for users: every user gets its customer. Must run inside the caller's transaction.
     private async Task<(IUser User, Customer Customer)> CreateUserAsync(string name, string email, string password)
     {
+        // Exception to the unit of work: the user is already saved here, by UserManager (ADR 0020)
         var user = await identityService.CreateUserAsync(name, email, password);
 
-        var customer = await customerService.CreateAsync(user.Id);
+        var customer = customerService.Create(user.Id);
 
         return (user, customer);
     }

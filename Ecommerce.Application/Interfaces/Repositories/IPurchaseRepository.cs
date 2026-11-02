@@ -11,6 +11,5 @@ public interface IPurchaseRepository
 
     Task<Purchase?> GetByIdAsync(int id);
     Task<Purchase?> GetByIdForCustomerAsync(int id, int customerId);
-    Task<Purchase> AddAsync(Purchase purchase);
-    Task<Purchase> UpdateAsync(Purchase purchase);
+    void Add(Purchase purchase);
 }

@@ -11,9 +11,8 @@ public interface IProductRepository
     Task<List<Product>> GetListByIdsAsync(IEnumerable<int> ids);
 
     Task<Product?> GetByIdForSellerAsync(int id, int sellerId);
-    Task<Product> AddAsync(Product product);
-    Task<Product> UpdateAsync(Product product);
-    Task DeleteAsync(Product product);
+    void Add(Product product);
+    void Delete(Product product);
 
     Task<bool> ExistsAsync(int id);
     Task<bool> ExistsForSellerAsync(int id, int sellerId);

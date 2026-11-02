@@ -9,6 +9,5 @@ public interface ICartRepository
 
     Task<Cart?> GetForCustomerAsync(int customerId);
 
-    Task<Cart> AddAsync(Cart cart);
-    Task<Cart> UpdateAsync(Cart cart);
+    void Add(Cart cart);
 }

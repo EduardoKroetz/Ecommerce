@@ -44,17 +44,8 @@ internal class PurchaseRepository(AppDbContext dbContext, ICancellationTokenProv
             .FirstOrDefaultAsync(p => p.Id == id && p.CustomerId == customerId, cancellationTokenProvider.Token);
     }
 
-    public async Task<Purchase> AddAsync(Purchase purchase)
+    public void Add(Purchase purchase)
     {
-        await dbContext.Purchases.AddAsync(purchase);
-        await dbContext.SaveChangesAsync();
-        return purchase;
-    }
-
-    public async Task<Purchase> UpdateAsync(Purchase purchase)
-    {
-        dbContext.Purchases.Update(purchase);
-        await dbContext.SaveChangesAsync();
-        return purchase;
+        dbContext.Purchases.Add(purchase);
     }
 }

@@ -36,23 +36,13 @@ internal class ProductCategoryRepository(AppDbContext dbContext, ICancellationTo
         return await dbContext.ProductCategories.FindAsync([id], cancellationTokenProvider.Token);
     }
 
-    public async Task<ProductCategory> AddAsync(ProductCategory productCategory)
+    public void Add(ProductCategory productCategory)
     {
-        await dbContext.ProductCategories.AddAsync(productCategory);
-        await dbContext.SaveChangesAsync();
-        return productCategory;
+        dbContext.ProductCategories.Add(productCategory);
     }
 
-    public async Task<ProductCategory> UpdateAsync(ProductCategory productCategory)
-    {
-        dbContext.ProductCategories.Update(productCategory);
-        await dbContext.SaveChangesAsync();
-        return productCategory;
-    }
-
-    public async Task DeleteAsync(ProductCategory productCategory)
+    public void Delete(ProductCategory productCategory)
     {
         dbContext.ProductCategories.Remove(productCategory);
-        await dbContext.SaveChangesAsync();
     }
 }

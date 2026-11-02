@@ -53,8 +53,7 @@ public class OrderService(
         purchase.RecalculateTotal(purchaseOrders);
         purchase.CancelIfAllOrdersCancelled(purchaseOrders);
 
-        await orderRepository.UpdateAsync(order);
-        await purchaseRepository.UpdateAsync(purchase);
+        await uow.SaveChangesAsync();
 
         await transaction.CommitAsync();
     }
@@ -68,7 +67,7 @@ public class OrderService(
 
         order.Ship();
 
-        await orderRepository.UpdateAsync(order);
+        await uow.SaveChangesAsync();
     }
 
     public async Task ConfirmDeliveryAsync(int orderId)
@@ -78,6 +77,6 @@ public class OrderService(
 
         order.ConfirmDelivery();
 
-        await orderRepository.UpdateAsync(order);
+        await uow.SaveChangesAsync();
     }
 }

@@ -5,6 +5,8 @@ namespace Ecommerce.Infra.Data;
 
 public class UnitOfWork(AppDbContext dbContext) : IUnitOfWork
 {
+    public Task SaveChangesAsync() => dbContext.SaveChangesAsync();
+
     public async Task<ITransaction> BeginTransactionAsync()
     {
         var transaction = await dbContext.Database.BeginTransactionAsync();

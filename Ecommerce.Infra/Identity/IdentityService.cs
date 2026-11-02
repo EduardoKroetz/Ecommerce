@@ -25,6 +25,7 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
             Email = email,
         };
 
+        // Exception to the unit of work: UserManager runs its own SaveChanges (ADR 0020)
         var result = await userManager.CreateAsync(newUser, password);
 
         if (!result.Succeeded)

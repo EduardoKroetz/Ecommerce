@@ -15,10 +15,8 @@ internal class SellerRepository(AppDbContext dbContext, ICancellationTokenProvid
             .FirstOrDefaultAsync(s => s.UserId == userId, cancellationTokenProvider.Token);
     }
 
-    public async Task<Seller> AddAsync(Seller seller)
+    public void Add(Seller seller)
     {
-        await dbContext.Sellers.AddAsync(seller);
-        await dbContext.SaveChangesAsync();
-        return seller;
+        dbContext.Sellers.Add(seller);
     }
 }

@@ -5,13 +5,16 @@ namespace Ecommerce.Application.Services;
 
 public class CustomerService(ICustomerRepository customerRepository)
 {
-    public async Task<Customer> CreateAsync(string userId)
+    // The id is only generated when the caller saves
+    public Customer Create(string userId)
     {
         var customer = new Customer
         {
             UserId = userId
         };
 
-        return await customerRepository.AddAsync(customer);
+        customerRepository.Add(customer);
+
+        return customer;
     }
 }

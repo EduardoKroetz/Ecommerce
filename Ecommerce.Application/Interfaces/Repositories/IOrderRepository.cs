@@ -14,7 +14,5 @@ public interface IOrderRepository
     Task<Order?> GetByIdForSellerAsync(int id, int sellerId);
     Task<Order?> GetByIdForCustomerOrSellerAsync(int id, int customerId, int? sellerId);
     Task<List<Order>> GetListByPurchaseIdAsync(int purchaseId);
-    Task AddRangeAsync(IEnumerable<Order> orders);
-    Task<Order> UpdateAsync(Order order);
-    Task UpdateRangeAsync(IEnumerable<Order> orders);
+    void AddRange(IEnumerable<Order> orders);
 }

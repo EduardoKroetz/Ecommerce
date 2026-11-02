@@ -10,7 +10,6 @@ public interface IProductCategoryRepository
     Task<ProductCategoryResponse?> GetDetailByIdAsync(int id);
 
     Task<ProductCategory?> GetByIdAsync(int id);
-    Task<ProductCategory> AddAsync(ProductCategory productCategory);
-    Task<ProductCategory> UpdateAsync(ProductCategory productCategory);
-    Task DeleteAsync(ProductCategory productCategory);
+    void Add(ProductCategory productCategory);
+    void Delete(ProductCategory productCategory);
 }

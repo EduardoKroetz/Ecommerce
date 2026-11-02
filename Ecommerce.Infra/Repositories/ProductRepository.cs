@@ -78,28 +78,14 @@ internal class ProductRepository(AppDbContext dbContext, ICancellationTokenProvi
         return await dbContext.OrderItems.AnyAsync(oi => oi.ProductId == id, cancellationTokenProvider.Token);
     }
 
-    public async Task<Product> AddAsync(Product product)
+    public void Add(Product product)
     {
-        await dbContext.Products.AddAsync(product);
-        await dbContext.SaveChangesAsync();
-        return product;
+        dbContext.Products.Add(product);
     }
 
-    public async Task DeleteAsync(Product product)
+    public void Delete(Product product)
     {
         dbContext.Products.Remove(product);
-        await dbContext.SaveChangesAsync();
-    }
-
-    public async Task<Product> UpdateAsync(Product product)
-    {
-        dbContext.Products.Update(product);
-
-        // Stock is only written by the atomic operations below; never overwrite it with the value loaded earlier
-        dbContext.Entry(product).Property(p => p.StockBalance).IsModified = false;
-
-        await dbContext.SaveChangesAsync();
-        return product;
     }
 
     public async Task<bool> TryDecrementStockAsync(int productId, int quantity)

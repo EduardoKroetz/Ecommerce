@@ -15,10 +15,8 @@ internal class CustomerRepository(AppDbContext dbContext, ICancellationTokenProv
             .FirstOrDefaultAsync(c => c.UserId == userId, cancellationTokenProvider.Token);
     }
 
-    public async Task<Customer> AddAsync(Customer customer)
+    public void Add(Customer customer)
     {
-        await dbContext.Customers.AddAsync(customer);
-        await dbContext.SaveChangesAsync();
-        return customer;
+        dbContext.Customers.Add(customer);
     }
 }

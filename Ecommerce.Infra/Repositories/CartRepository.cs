@@ -26,17 +26,8 @@ internal class CartRepository(AppDbContext dbContext, ICancellationTokenProvider
             .FirstOrDefaultAsync(c => c.CustomerId == customerId, cancellationTokenProvider.Token);
     }
 
-    public async Task<Cart> AddAsync(Cart cart)
+    public void Add(Cart cart)
     {
-        await dbContext.Carts.AddAsync(cart);
-        await dbContext.SaveChangesAsync();
-        return cart;
-    }
-
-    public async Task<Cart> UpdateAsync(Cart cart)
-    {
-        dbContext.Carts.Update(cart);
-        await dbContext.SaveChangesAsync();
-        return cart;
+        dbContext.Carts.Add(cart);
     }
 }

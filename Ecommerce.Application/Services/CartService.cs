@@ -11,13 +11,14 @@ public class CartService(
     ICartRepository cartRepository,
     ICurrentUserProvider userProvider,
     IProductRepository productRepository,
+    IUnitOfWork uow,
     TimeProvider timeProvider)
 {
-    private async Task<Cart> CreateCartAsync()
+    private Cart CreateCart()
     {
         var cart = new Cart(userProvider.CustomerId, timeProvider.GetUtcDateTime());
 
-        await cartRepository.AddAsync(cart);
+        cartRepository.Add(cart);
         return cart;
     }
 
@@ -31,7 +32,7 @@ public class CartService(
     private async Task<Cart> GetOrCreateCartAsync()
     {
         return await cartRepository.GetForCustomerAsync(userProvider.CustomerId)
-            ?? await CreateCartAsync();
+            ?? CreateCart();
     }
 
     public async Task<CartResponse> GetCartDetailAsync()
@@ -40,7 +41,9 @@ public class CartService(
         if (cartDetail is not null)
             return cartDetail;
 
-        await CreateCartAsync();
+        CreateCart();
+
+        await uow.SaveChangesAsync();
 
         return await GetCurrentCartDetailAsync();
     }
@@ -54,7 +57,7 @@ public class CartService(
 
         cart.AddItem(request.ProductId, request.Quantity);
 
-        await cartRepository.UpdateAsync(cart);
+        await uow.SaveChangesAsync();
 
         return await GetCurrentCartDetailAsync();
     }
@@ -65,7 +68,7 @@ public class CartService(
 
         cart.RemoveItem(productId);
 
-        await cartRepository.UpdateAsync(cart);
+        await uow.SaveChangesAsync();
 
         return await GetCurrentCartDetailAsync();
     }
@@ -76,7 +79,7 @@ public class CartService(
 
         cart.UpdateItemQuantity(productId, request.Quantity);
 
-        await cartRepository.UpdateAsync(cart);
+        await uow.SaveChangesAsync();
 
         return await GetCurrentCartDetailAsync();
     }

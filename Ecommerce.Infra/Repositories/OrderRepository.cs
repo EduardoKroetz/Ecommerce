@@ -66,23 +66,9 @@ internal class OrderRepository(AppDbContext dbContext, ICancellationTokenProvide
             .ToListAsync(cancellationTokenProvider.Token);
     }
 
-    public async Task AddRangeAsync(IEnumerable<Order> orders)
+    public void AddRange(IEnumerable<Order> orders)
     {
-        await dbContext.Orders.AddRangeAsync(orders);
-        await dbContext.SaveChangesAsync();
-    }
-
-    public async Task<Order> UpdateAsync(Order order)
-    {
-        dbContext.Orders.Update(order);
-        await dbContext.SaveChangesAsync();
-        return order;
-    }
-
-    public async Task UpdateRangeAsync(IEnumerable<Order> orders)
-    {
-        dbContext.Orders.UpdateRange(orders);
-        await dbContext.SaveChangesAsync();
+        dbContext.Orders.AddRange(orders);
     }
 
     // The buyer lives on the purchase: resolved through the internal navigation, available to Infra queries only

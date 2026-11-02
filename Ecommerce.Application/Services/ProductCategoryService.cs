@@ -1,12 +1,13 @@
 using Ecommerce.Application.DTOs;
 using Ecommerce.Application.DTOs.ProductCategories;
+using Ecommerce.Application.Interfaces.Infra;
 using Ecommerce.Application.Interfaces.Repositories;
 using Ecommerce.Domain.Entities;
 using Ecommerce.Domain.Exceptions;
 
 namespace Ecommerce.Application.Services;
 
-public class ProductCategoryService(IProductCategoryRepository productCategoryRepository)
+public class ProductCategoryService(IProductCategoryRepository productCategoryRepository, IUnitOfWork uow)
 {
     public async Task<PagedResult<ProductCategoryResponse>> SearchAsync(PaginationQuery query)
     {
@@ -25,7 +26,9 @@ public class ProductCategoryService(IProductCategoryRepository productCategoryRe
             Name = request.Name
         };
 
-        await productCategoryRepository.AddAsync(productCategory);
+        productCategoryRepository.Add(productCategory);
+
+        await uow.SaveChangesAsync();
 
         return await GetByIdAsync(productCategory.Id);
     }
@@ -37,7 +40,7 @@ public class ProductCategoryService(IProductCategoryRepository productCategoryRe
 
         productCategory.Name = request.Name;
 
-        await productCategoryRepository.UpdateAsync(productCategory);
+        await uow.SaveChangesAsync();
 
         return await GetByIdAsync(id);
     }
@@ -47,6 +50,8 @@ public class ProductCategoryService(IProductCategoryRepository productCategoryRe
         var productCategory = await productCategoryRepository.GetByIdAsync(id)
             ?? throw new NotFoundException("Product category not found.");
 
-        await productCategoryRepository.DeleteAsync(productCategory);
+        productCategoryRepository.Delete(productCategory);
+
+        await uow.SaveChangesAsync();
     }
 }

@@ -12,6 +12,7 @@ public class ProductService(
     IProductRepository productRepository,
     IProductCategoryRepository productCategoryRepository,
     ICurrentUserProvider userProvider,
+    IUnitOfWork uow,
     TimeProvider timeProvider)
 {
     private int CurrentSellerId => userProvider.SellerId ?? throw new UnauthorizedException("User is not a seller.");
@@ -36,7 +37,9 @@ public class ProductService(
             request.StockBalance,
             timeProvider.GetUtcDateTime());
 
-        await productRepository.AddAsync(product);
+        productRepository.Add(product);
+
+        await uow.SaveChangesAsync();
 
         return await GetByIdAsync(product.Id);
     }
@@ -48,7 +51,7 @@ public class ProductService(
 
         product.Update(request.Name, request.Description, request.Price);
 
-        await productRepository.UpdateAsync(product);
+        await uow.SaveChangesAsync();
 
         return await GetByIdAsync(id);
     }
@@ -73,7 +76,9 @@ public class ProductService(
         if (await productRepository.HasOrdersAsync(id))
             throw new ConflictException("Product cannot be deleted because it belongs to existing orders.");
 
-        await productRepository.DeleteAsync(product);
+        productRepository.Delete(product);
+
+        await uow.SaveChangesAsync();
     }
 
     public async Task AddCategoryAsync(int productId, int productCategoryId)
@@ -86,7 +91,7 @@ public class ProductService(
 
         product.AddCategory(productCategory);
 
-        await productRepository.UpdateAsync(product);
+        await uow.SaveChangesAsync();
     }
 
     public async Task RemoveCategoryAsync(int productId, int productCategoryId)
@@ -99,6 +104,6 @@ public class ProductService(
 
         product.RemoveCategory(productCategory.Id);
 
-        await productRepository.UpdateAsync(product);
+        await uow.SaveChangesAsync();
     }
 }

@@ -5,13 +5,16 @@ namespace Ecommerce.Application.Services;
 
 public class SellerService(ISellerRepository sellerRepository)
 {
-    public async Task<Seller> CreateAsync(string userId)
+    // The id is only generated when the caller saves
+    public Seller Create(string userId)
     {
         var seller = new Seller
         {
             UserId = userId
         };
 
-        return await sellerRepository.AddAsync(seller);
+        sellerRepository.Add(seller);
+
+        return seller;
     }
 }

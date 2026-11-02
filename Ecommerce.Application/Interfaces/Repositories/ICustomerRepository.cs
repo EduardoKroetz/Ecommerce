@@ -5,5 +5,5 @@ namespace Ecommerce.Application.Interfaces.Repositories;
 public interface ICustomerRepository
 {
     Task<Customer?> GetByUserIdAsync(string userId);
-    Task<Customer> AddAsync(Customer customer);
+    void Add(Customer customer);
 }

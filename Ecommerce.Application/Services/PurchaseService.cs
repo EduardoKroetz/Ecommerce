@@ -80,16 +80,19 @@ public class PurchaseService(
         var orders = itemsBySeller.Select(s => new Order(s.SellerId, s.Items, createdAt)).ToList();
         var purchase = new Purchase(customerId, request.PaymentMethod!.Value, orders, createdAt);
 
-        // The purchase is saved first: orders reference it by id (ADR 0016)
-        await purchaseRepository.AddAsync(purchase);
+        // The purchase is saved first to generate its id: orders reference it by id (ADR 0016)
+        purchaseRepository.Add(purchase);
+
+        await uow.SaveChangesAsync();
 
         foreach (var order in orders)
             order.AssignToPurchase(purchase.Id);
 
-        await orderRepository.AddRangeAsync(orders);
+        orderRepository.AddRange(orders);
 
         cart.Clear();
-        await cartRepository.UpdateAsync(cart);
+
+        await uow.SaveChangesAsync();
 
         await transaction.CommitAsync();
 
@@ -118,8 +121,7 @@ public class PurchaseService(
 
         purchase.RecalculateTotal(orders);
 
-        await orderRepository.UpdateRangeAsync(orders);
-        await purchaseRepository.UpdateAsync(purchase);
+        await uow.SaveChangesAsync();
 
         await transaction.CommitAsync();
     }
@@ -136,11 +138,6 @@ public class PurchaseService(
         foreach (var order in orders.Where(o => o.Status == EOrderStatus.AwaitingPayment))
             order.MarkAsPaid();
 
-        await using var transaction = await uow.BeginTransactionAsync();
-
-        await orderRepository.UpdateRangeAsync(orders);
-        await purchaseRepository.UpdateAsync(purchase);
-
-        await transaction.CommitAsync();
+        await uow.SaveChangesAsync();
     }
 }
