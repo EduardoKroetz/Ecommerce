@@ -46,7 +46,8 @@ public class OrderService(
 
         await using var transaction = await uow.BeginTransactionAsync();
 
-        foreach (var item in order.Items)
+        // Ascending ProductId: concurrent transactions never lock the same products in opposite orders (ADR 0018)
+        foreach (var item in order.Items.OrderBy(i => i.ProductId))
             await productRepository.IncrementStockAsync(item.ProductId, item.Quantity);
 
         purchase.RecalculateTotal(purchaseOrders);
