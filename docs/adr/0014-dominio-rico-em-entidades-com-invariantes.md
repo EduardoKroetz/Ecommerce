@@ -32,5 +32,5 @@ A 0007 manteve o domínio anêmico na v1, de forma deliberada, como ponto de par
 - O modelo misto exige decidir, por entidade, se ela é rica ou anêmica.
 
 ## Gatilho de revisão
-- Concorrência otimista implementada (ex.: `xmin`): reavaliar mover a baixa de estoque para a entidade.
+- Regra de estoque revisada: ver gatilhos da [0018](0018-concorrencia-na-atualizacao-de-estoque.md).
 - Uma entidade anêmica ganhar uma invariante: passa a ser rica.

@@ -67,7 +67,7 @@ Referências entre agregados que continuam como navegação pública, em vez de 
 | `Order` | `OrderItem` | Máquina de estados; total = soma dos itens |
 | `Cart` | `CartItem` | Limite de quantidade por item; um item por produto |
 | `Purchase` | — | Status de pagamento; na criação, pelo menos um pedido e um pedido por vendedor (ADR 0017) |
-| `Product` | — | Estoque nunca negativo, garantido no banco (ADR 0014) |
+| `Product` | — | Estoque nunca negativo, garantido no banco (ADR 0018) |
 | `Customer` | — | — |
 | `Seller` | — | — |
 | `ProductCategory` | — | — |
@@ -104,7 +104,7 @@ Regras para valores desnormalizados:
 | Envolve só o próprio agregado | Método da entidade | `order.Ship()`, `order.Cancel()` |
 | Decide o estado de **um** agregado usando dados de outros | Método desse agregado, recebendo os dados por parâmetro. A Application carrega os dados pelo repositório, nunca por navegação. | `purchase.RecalculateTotal(orders)` |
 | Coordena **vários** agregados ou precisa de infraestrutura (repositório, consulta, tempo) | Serviço de aplicação, que carrega, chama os métodos de cada agregado e salva | `OrderService.CancelAsync` |
-| Depende de concorrência ou do estado atual no banco | Repositório, com operação atômica | `TryDecrementStockAsync` (ADR 0014) |
+| Depende de concorrência ou do estado atual no banco | Repositório, com operação atômica | `TryDecrementStockAsync` (ADR 0018) |
 
 **Serviço de domínio:** não adotado. Gatilho: uma regra pura que não pertença a nenhum agregado e seja usada por mais de um serviço de aplicação.
 
