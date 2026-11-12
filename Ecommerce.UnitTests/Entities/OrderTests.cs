@@ -107,6 +107,17 @@ public class OrderTests
         Assert.Equal(5, order.PurchaseId);
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void AssignToPurchase_WithNonPositiveId_Throws(int purchaseId)
+    {
+        var order = OrderSeeds.Create();
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => order.AssignToPurchase(purchaseId));
+        Assert.Equal(0, order.PurchaseId);
+    }
+
     [Fact]
     public void AssignToPurchase_WhenAlreadyAssigned_Throws()
     {

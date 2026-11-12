@@ -2,7 +2,7 @@
 
 public static class OrderSeeds
 {
-    public static Order Create(int sellerId = 1, List<OrderItem> items = null, DateTime createdAt = default)
+    public static Order Create(int sellerId = 1, List<OrderItem>? items = null, DateTime createdAt = default)
     {
         items ??= new()
         {
