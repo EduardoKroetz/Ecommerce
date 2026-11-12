@@ -27,9 +27,11 @@
     <File Path="docs/adr/0018-concorrencia-na-atualizacao-de-estoque.md" />
     <File Path="docs/adr/0019-concorrencia-otimista-nas-transicoes-de-status.md" />
     <File Path="docs/adr/0020-unit-of-work-como-ponto-unico-de-gravacao.md" />
+    <File Path="docs/adr/0021-estrategia-de-testes.md" />
   </Folder>
   <Project Path="Ecommerce.Api/Ecommerce.Api.csproj" />
   <Project Path="Ecommerce.Application/Ecommerce.Application.csproj" />
   <Project Path="Ecommerce.Domain/Ecommerce.Domain.csproj" />
   <Project Path="Ecommerce.Infra/Ecommerce.Infra.csproj" />
+  <Project Path="Ecommerce.UnitTests/Ecommerce.UnitTests.csproj" Id="22001fa9-f144-4e47-8188-e2b690a66578" />
 </Solution>
