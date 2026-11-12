@@ -39,6 +39,8 @@ public class Order : BaseEntity
     // The purchase id only exists after the purchase is saved, so the link happens once, after creation
     public void AssignToPurchase(int purchaseId)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(purchaseId);
+
         if (PurchaseId != 0)
             throw new InvalidOperationException($"Order '{Id}' is already assigned to purchase '{PurchaseId}'.");
 

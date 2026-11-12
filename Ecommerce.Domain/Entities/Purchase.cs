@@ -22,6 +22,9 @@ public class Purchase : BaseEntity
         if (purchaseOrders.GroupBy(o => o.SellerId).Any(sellerOrders => sellerOrders.Count() > 1))
             throw new DomainException(EDomainExceptionCode.PurchaseDuplicateSellerOrders, "Purchase must have only one order per seller.");
 
+        if (purchaseOrders.Any(o => o.Status != EOrderStatus.AwaitingPayment))
+            throw new DomainException(EDomainExceptionCode.PurchaseWithOrderNotAwaitingPayment, "Purchase can only be created from orders awaiting payment.");
+
         CustomerId = customerId;
         PaymentMethod = paymentMethod;
         OriginalTotalAmount = SumActiveOrders(purchaseOrders);
