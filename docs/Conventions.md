@@ -111,11 +111,12 @@ Estratégia (o que testar em cada nível): ADR 0021.
 ### Seeds
 - Uma classe `{Entidade}Seeds` com `Create(...)`: todos os parâmetros opcionais, com valores padrão válidos.
 - O teste informa por nome só o parâmetro relevante ao cenário (`OrderSeeds.Create(items: [])`).
-- Ids explícitos quando a regra depende deles. Nunca reflection para alterar estado ou ids.
+- Ids explícitos quando a regra depende deles. O `Id` de entidade, gerado pelo banco, é definido com `WithId(...)`,
+  extensão de teste sobre `BaseEntity` (`Extensions/`). Fora isso, nunca reflection para alterar estado.
 
 ### Asserções
 - Rejeição do domínio: `Assert.Throws<DomainException>` e conferir o `Code`, nunca a mensagem.
-- Erro de programação (`InvalidOperationException`) é verificado pelo tipo.
+- Erro de programação (`InvalidOperationException`, `ArgumentOutOfRangeException`) é verificado pelo tipo.
 
 ### Integração
 - O service é obtido pelo container de DI, com `ICurrentUserProvider` e `TimeProvider` substituídos por stubs.

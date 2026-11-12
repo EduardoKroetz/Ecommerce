@@ -66,7 +66,7 @@ Referências entre agregados que continuam como navegação pública, em vez de 
 |---|---|---|
 | `Order` | `OrderItem` | Máquina de estados; total = soma dos itens |
 | `Cart` | `CartItem` | Limite de quantidade por item; um item por produto |
-| `Purchase` | — | Status de pagamento; na criação, pelo menos um pedido e um pedido por vendedor (ADR 0017) |
+| `Purchase` | — | Status de pagamento; na criação, pelo menos um pedido, um pedido por vendedor e todos aguardando pagamento (ADR 0017) |
 | `Product` | — | Estoque nunca negativo, garantido no banco (ADR 0018) |
 | `Customer` | — | — |
 | `Seller` | — | — |

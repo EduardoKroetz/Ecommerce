@@ -16,7 +16,7 @@ Purchase e Order são agregados separados ([0015](0015-ddd-tatico-leve-agregados
 - Referência: o Order conhece a Purchase pelo id. A Purchase nunca guarda os Orders. A navegação `internal` `Purchase.Orders` ([0016](0016-navegacoes-entre-agregados-internal-e-projecoes-na-infra.md)) existe só para leitura na Infra: nunca é preenchida pela entidade nem usada por comandos.
 - Derivação: a Purchase calcula seus valores a partir dos Orders recebidos por parâmetro.
 - Criação: os Orders são criados primeiro; a Purchase é construída a partir deles e o vínculo é feito depois (`order.AssignToPurchase(id)`, uma única vez).
-- Invariantes de criação no construtor da Purchase: pelo menos um pedido, um pedido por vendedor.
+- Invariantes de criação no construtor da Purchase: pelo menos um pedido, um pedido por vendedor, todos aguardando pagamento.
 - Valores:
   - `OriginalTotalAmount`: congelado na criação, registro do valor original da compra.
   - `TotalAmount`: desnormalizado, recalculado por `RecalculateTotal(orders)` nos pontos de escrita listados no `docs/domain-model.md`.
