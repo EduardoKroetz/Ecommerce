@@ -16,6 +16,9 @@ public class Order : BaseEntity
         if (_items.Count == 0)
             throw new DomainException(EDomainExceptionCode.OrderWithoutItems, "Order must have at least one item.");
 
+        if (_items.GroupBy(oi => oi.ProductId).Any(g => g.Count() > 1))
+            throw new DomainException(EDomainExceptionCode.OrderWithDuplicatedItems, "Order cannot have duplicated items.");
+
         SellerId = sellerId;
         Status = EOrderStatus.AwaitingPayment;
         CreatedAt = createdAt;
@@ -45,7 +48,7 @@ public class Order : BaseEntity
     public void MarkAsPaid()
     {
         if (Status != EOrderStatus.AwaitingPayment)
-            throw new DomainException(EDomainExceptionCode.InvalidOrderStatus, "Only orders awaiting payment can be paid.");
+            throw InvalidStatus("Only orders awaiting payment can be paid.");
 
         Status = EOrderStatus.AwaitingShipment;
     }
@@ -56,30 +59,28 @@ public class Order : BaseEntity
             throw new DomainException(EDomainExceptionCode.OrderAlreadyCancelled, "Order is already cancelled.");
 
         if (Status != EOrderStatus.AwaitingPayment)
-            throw new DomainException(EDomainExceptionCode.InvalidOrderStatus, "Only orders awaiting payment can be cancelled.");
+            throw InvalidStatus("Only orders awaiting payment can be cancelled.");
 
         Status = EOrderStatus.Cancelled;
     }
 
     public void Ship()
     {
-        if (Status == EOrderStatus.Cancelled)
-            throw new DomainException(EDomainExceptionCode.OrderCancelled, "Order is cancelled.");
-
         if (Status != EOrderStatus.AwaitingShipment)
-            throw new DomainException(EDomainExceptionCode.InvalidOrderStatus, "Only orders awaiting shipment can be shipped.");
+            throw InvalidStatus("Only orders awaiting shipment can be shipped.");
 
         Status = EOrderStatus.Shipped;
     }
 
     public void ConfirmDelivery()
     {
-        if (Status == EOrderStatus.Cancelled)
-            throw new DomainException(EDomainExceptionCode.OrderCancelled, "Order is cancelled.");
-
         if (Status != EOrderStatus.Shipped)
-            throw new DomainException(EDomainExceptionCode.InvalidOrderStatus, "Only shipped orders can be confirmed as delivered.");
+            throw InvalidStatus("Only shipped orders can be confirmed as delivered.");
 
         Status = EOrderStatus.Delivered;
     }
+
+    // The current status goes in the details, so a single code still tells why the transition was refused
+    private DomainException InvalidStatus(string message) =>
+        new(EDomainExceptionCode.InvalidOrderStatus, message, new { currentStatus = Status });
 }

@@ -41,11 +41,11 @@ public class Purchase : BaseEntity
 
     public void Pay()
     {
-        if (Status == EPurchaseStatus.Cancelled)
-            throw new DomainException(EDomainExceptionCode.PurchaseCancelled, "Purchase is cancelled.");
-
         if (Status == EPurchaseStatus.Paid)
             throw new DomainException(EDomainExceptionCode.PurchaseAlreadyPaid, "Purchase is already paid.");
+
+        if (Status != EPurchaseStatus.Pending)
+            throw InvalidStatus("Only pending purchases can be paid.");
 
         Status = EPurchaseStatus.Paid;
     }
@@ -55,8 +55,8 @@ public class Purchase : BaseEntity
         if (Status == EPurchaseStatus.Cancelled)
             throw new DomainException(EDomainExceptionCode.PurchaseAlreadyCancelled, "Purchase is already cancelled.");
 
-        if (Status == EPurchaseStatus.Paid)
-            throw new DomainException(EDomainExceptionCode.PurchaseAlreadyPaid, "Purchase cannot be cancelled after payment.");
+        if (Status != EPurchaseStatus.Pending)
+            throw InvalidStatus("Only pending purchases can be cancelled.");
 
         Status = EPurchaseStatus.Cancelled;
     }
@@ -79,6 +79,10 @@ public class Purchase : BaseEntity
 
     private static decimal SumActiveOrders(IEnumerable<Order> orders) =>
         orders.Where(o => o.Status != EOrderStatus.Cancelled).Sum(o => o.TotalAmount);
+
+    // The current status goes in the details, so a single code still tells why the transition was refused
+    private DomainException InvalidStatus(string message) =>
+        new(EDomainExceptionCode.InvalidPurchaseStatus, message, new { currentStatus = Status });
 
     private List<Order> EnsureOwnOrders(IEnumerable<Order> orders)
     {

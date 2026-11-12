@@ -1,17 +1,22 @@
-﻿namespace Ecommerce.Domain.Entities;
+﻿using Ecommerce.Domain.Exceptions;
+
+namespace Ecommerce.Domain.Entities;
 
 public class OrderItem : BaseEntity
 {
     private OrderItem() { ProductName = null!; } // EF
 
     // Snapshot of the product at purchase time (ADR 0003): price and name are frozen
-    public OrderItem(Product product, int quantity)
+    public OrderItem(int productId, string productName, decimal unitPrice, int quantity)
     {
-        ProductId = product.Id;
-        ProductName = product.Name;
-        UnitPrice = product.Price;
+        if (quantity <= 0)
+            throw new DomainException(EDomainExceptionCode.InvalidOrderItemQuantity, "Order item quantity must be greater than zero.");
+
+        ProductId = productId;
+        ProductName = productName;
+        UnitPrice = unitPrice;
         Quantity = quantity;
-        TotalPrice = product.Price * quantity;
+        TotalPrice = unitPrice * quantity;
     }
 
     public int OrderId { get; private set; }

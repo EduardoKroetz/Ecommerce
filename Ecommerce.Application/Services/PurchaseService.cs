@@ -58,7 +58,7 @@ public class PurchaseService(
             .Select(sellerItems => new
             {
                 SellerId = sellerItems.Key,
-                Items = sellerItems.Select(ci => new OrderItem(products[ci.ProductId], ci.Quantity)).ToList()
+                Items = sellerItems.Select(ci => new OrderItem(ci.ProductId, products[ci.ProductId].Name, products[ci.ProductId].Price, ci.Quantity)).ToList()
             })
             .ToList();
 

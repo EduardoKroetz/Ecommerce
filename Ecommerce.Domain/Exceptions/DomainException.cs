@@ -2,12 +2,12 @@
 
 public class DomainException : Exception
 {
-    public string Code { get; set; }
+    public EDomainExceptionCode Code { get; set; }
     public object? Details { get; set; }
 
     public DomainException(EDomainExceptionCode code, string message, object? details = null) : base(message)
     {
-        Code = code.ToString();
+        Code = code;
         Details = details;
     }
 }
@@ -19,11 +19,10 @@ public enum EDomainExceptionCode
     InsufficientStock,
     OrderNotFound,
     OrderAlreadyCancelled,
-    OrderCancelled,
     InvalidOrderStatus,
     PurchaseAlreadyCancelled,
-    PurchaseCancelled,
     PurchaseAlreadyPaid,
+    InvalidPurchaseStatus,
     CartItemQuantityExceeded,
     CartItemNotFound,
     OrderWithoutItems,
@@ -33,5 +32,7 @@ public enum EDomainExceptionCode
     ProductDescriptionTooLong,
     ProductPriceInvalid,
     ProductStockInvalid,
-    ProductCategoryNotAssociated
+    ProductCategoryNotAssociated,
+    InvalidOrderItemQuantity,
+    OrderWithDuplicatedItems
 }
