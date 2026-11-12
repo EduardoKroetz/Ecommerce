@@ -29,6 +29,9 @@
 - Várias propriedades sem regra própria mudam juntas por um único `Update(...)`. Não criar um método por
   propriedade (`UpdateName`, `UpdateDescription`) só para validar; método dedicado só quando a mudança
   tem regra própria (`IncreaseStock`, `Cancel`).
+- Transição de status recusada lança `Invalid{Entidade}Status`, com o status atual em `details` (`currentStatus`).
+  Código próprio `{Entidade}Already{Ação}` só quando a mesma ação já foi aplicada (`OrderAlreadyCancelled`,
+  `PurchaseAlreadyPaid`): o cliente pode tratá-lo como sucesso numa nova tentativa.
 
 ## Services
 - Operação repetida entre métodos públicos do mesmo service (ex.: a mesma validação em criar e
@@ -84,3 +87,38 @@ Teste: se a rota mudar e o nome de uma representação precisar mudar junto, ela
 - Toda invariante declarada no domínio é aplicada pela entidade. O DTO antecipa (400); a entidade garante (422).
 - Credenciais têm uma única fonte: `IdentityOptions` vêm de `PasswordPolicy`, e erros do
   `IdentityResult` viram `ValidationException` (400).
+
+## Testes
+Estratégia (o que testar em cada nível): ADR 0021.
+
+### Organização
+- `Ecommerce.UnitTests` testa o domínio; `Ecommerce.IntegrationTests` testa services e API.
+- Uma classe `{Entidade}Tests` por agregado. Itens do agregado são testados na classe da raiz
+  (`OrderItem` em `OrderTests`), com o prefixo do item no nome do teste (`CreateOrderItem_...`).
+- Pastas espelham o que é testado (`Entities/`). Seeds ficam em `Seeds/`.
+
+### Nomes
+- Padrão `{Método}_{Condição}_{Resultado}`.
+- Condição: `With...` para a entrada (`Create_WithoutItems`), `When...` para o estado (`MarkAsPaid_WhenAwaitingPayment`).
+  Omitida quando o cenário é o caso válido padrão (`Create_StartsAwaitingPayment`).
+- Resultado: `IsRejected` para rejeição do domínio, `MovesTo{Status}` para transição de status.
+  Nos demais casos, descreve o que é verificado (`Create_TotalIsSumOfItemPriceTimesQuantity`).
+
+### Estrutura
+- Preparação, ação e verificação separadas por linha em branco, sem comentários `// Arrange`.
+- Um comportamento por teste. Variações da mesma entrada usam `[Theory]` com `[InlineData]`.
+
+### Seeds
+- Uma classe `{Entidade}Seeds` com `Create(...)`: todos os parâmetros opcionais, com valores padrão válidos.
+- O teste informa por nome só o parâmetro relevante ao cenário (`OrderSeeds.Create(items: [])`).
+- Ids explícitos quando a regra depende deles. Nunca reflection para alterar estado ou ids.
+
+### Asserções
+- Rejeição do domínio: `Assert.Throws<DomainException>` e conferir o `Code`, nunca a mensagem.
+- Erro de programação (`InvalidOperationException`) é verificado pelo tipo.
+
+### Integração
+- O service é obtido pelo container de DI, com `ICurrentUserProvider` e `TimeProvider` substituídos por stubs.
+- O estado final é conferido no banco, por um escopo novo, nunca pela entidade em memória do service.
+- Os dados são limpos com Respawn antes de cada teste.
+- Conflito de concorrência é provocado pelo interceptor do EF, nunca por chamadas paralelas.
