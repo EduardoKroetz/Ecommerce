@@ -33,5 +33,6 @@
   <Project Path="Ecommerce.Application/Ecommerce.Application.csproj" />
   <Project Path="Ecommerce.Domain/Ecommerce.Domain.csproj" />
   <Project Path="Ecommerce.Infra/Ecommerce.Infra.csproj" />
+  <Project Path="Ecommerce.IntegrationTests/Ecommerce.IntegrationTests.csproj" />
   <Project Path="Ecommerce.UnitTests/Ecommerce.UnitTests.csproj" Id="22001fa9-f144-4e47-8188-e2b690a66578" />
 </Solution>
