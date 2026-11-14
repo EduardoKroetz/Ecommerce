@@ -95,10 +95,10 @@ Estratégia (o que testar em cada nível): ADR 0021.
 - `Ecommerce.UnitTests` testa o domínio; `Ecommerce.IntegrationTests` testa services e API.
 - Uma classe `{Entidade}Tests` por agregado. Itens do agregado são testados na classe da raiz
   (`OrderItem` em `OrderTests`), com o prefixo do item no nome do teste (`CreateOrderItem_...`).
-- Pastas espelham o que é testado (`Entities/`). Seeds ficam em `Seeds/`.
+- Pastas espelham o que é testado (`Entities/`). As classes de dados de teste ficam em `TestData/`.
 
 ### Nomes
-- Padrão `{Método}_{Condição}_{Resultado}`.
+- Padrão `{Método}_{Condição}_{Resultado}`. O método vai sem o sufixo `Async`, que é assinatura e não comportamento: `Create_...`, nunca `CreateAsync_...`.
 - Condição: `With...` para a entrada (`Create_WithoutItems`), `When...` para o estado (`MarkAsPaid_WhenAwaitingPayment`).
   Omitida quando o cenário é o caso válido padrão (`Create_StartsAwaitingPayment`).
 - Resultado: `IsRejected` para rejeição do domínio, `MovesTo{Status}` para transição de status.
@@ -108,9 +108,9 @@ Estratégia (o que testar em cada nível): ADR 0021.
 - Preparação, ação e verificação separadas por linha em branco, sem comentários `// Arrange`.
 - Um comportamento por teste. Variações da mesma entrada usam `[Theory]` com `[InlineData]`.
 
-### Seeds
-- Uma classe `{Entidade}Seeds` com `Create(...)`: todos os parâmetros opcionais, com valores padrão válidos.
-- O teste informa por nome só o parâmetro relevante ao cenário (`OrderSeeds.Create(items: [])`).
+### TestData
+- Uma classe `{Entidade}TestData` com `Create(...)`: todos os parâmetros opcionais, com valores padrão válidos.
+- O teste informa por nome só o parâmetro relevante ao cenário (`OrderTestData.Create(items: [])`).
 - Ids explícitos quando a regra depende deles. O `Id` de entidade, gerado pelo banco, é definido com `WithId(...)`,
   extensão de teste sobre `BaseEntity` (`Extensions/`). Fora isso, nunca reflection para alterar estado.
 
@@ -119,7 +119,12 @@ Estratégia (o que testar em cada nível): ADR 0021.
 - Erro de programação (`InvalidOperationException`, `ArgumentOutOfRangeException`) é verificado pelo tipo.
 
 ### Integração
-- O service é obtido pelo container de DI, com `ICurrentUserProvider` e `TimeProvider` substituídos por stubs.
-- O estado final é conferido no banco, por um escopo novo, nunca pela entidade em memória do service.
+- O service é obtido por `Services.Get<T>(customerId, sellerId)`, do container de DI, com `ICurrentUserProvider` e
+  `TimeProvider` substituídos por stubs.
+- Cenários são montados por `TestData` (`TestData.SellerAsync()`, `TestData.ProductAsync(...)`), com parâmetros opcionais
+  e valores padrão válidos, também no Act. Nada de métodos privados de montagem dentro da classe de teste.
+- Verificação: por padrão, pela operação pública de leitura correspondente (`GetByIdAsync` do service). `QueryAsync`
+  (sem tracking, em escopo novo) só para efeitos que nenhuma operação de leitura expõe: versão de concorrência e
+  estado interno (ex.: `SellerId` do produto).
 - Os dados são limpos com Respawn antes de cada teste.
 - Conflito de concorrência é provocado pelo interceptor do EF, nunca por chamadas paralelas.

@@ -30,7 +30,7 @@ O comportamento crítico está em três lugares:
 - **Projetos separados:** `Ecommerce.UnitTests` (domínio) e `Ecommerce.IntegrationTests` (services e API). Têm velocidades e dependências diferentes e podem rodar em etapas distintas do CI.
 - **xUnit** como framework.
 - **Sem `InternalsVisibleTo` para os projetos de teste:** os testes usam só a API pública. Precisar de um membro `internal` é sinal de problema no teste ou no design.
-- As convenções de escrita (nomes, estrutura, seeds e asserções) ficam em `docs/Conventions.md`.
+- As convenções de escrita (nomes, estrutura, dados de teste e asserções) ficam em `docs/Conventions.md`.
 
 ## Consequências
 - ➕ Atomicidade e concorrência ficam verificáveis: o teste observa o estado final no banco, inclusive o rollback em conflito.
