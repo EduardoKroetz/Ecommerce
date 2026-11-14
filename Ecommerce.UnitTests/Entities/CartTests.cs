@@ -7,7 +7,7 @@ public class CartTests
     [Fact]
     public void Create_StartsEmpty()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
 
         Assert.Empty(cart.Items);
     }
@@ -17,7 +17,7 @@ public class CartTests
     {
         var createdAt = new DateTime(2026, 1, 15, 10, 30, 0, DateTimeKind.Utc);
 
-        var cart = CartSeeds.Create(customerId: 7, createdAt: createdAt);
+        var cart = CartTestData.Create(customerId: 7, createdAt: createdAt);
 
         Assert.Equal(7, cart.CustomerId);
         Assert.Equal(createdAt, cart.CreatedAt);
@@ -26,7 +26,7 @@ public class CartTests
     [Fact]
     public void AddItem_WithNewProduct_AddsItem()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
 
         cart.AddItem(productId: 1, quantity: 2);
 
@@ -38,7 +38,7 @@ public class CartTests
     [Fact]
     public void AddItem_WithProductAlreadyInCart_IncreasesQuantity()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
         cart.AddItem(productId: 1, quantity: 2);
 
         cart.AddItem(productId: 1, quantity: 3);
@@ -50,7 +50,7 @@ public class CartTests
     [Fact]
     public void AddItem_WithDifferentProducts_KeepsOneItemPerProduct()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
 
         cart.AddItem(productId: 1, quantity: 2);
         cart.AddItem(productId: 2, quantity: 1);
@@ -62,7 +62,7 @@ public class CartTests
     [Fact]
     public void AddItem_WithMaxQuantity_AddsItem()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
 
         cart.AddItem(productId: 1, quantity: CartItem.MaxQuantity);
 
@@ -72,7 +72,7 @@ public class CartTests
     [Fact]
     public void AddItem_WithQuantityAboveMax_IsRejected()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
 
         var exception = Assert.Throws<DomainException>(() => cart.AddItem(productId: 1, quantity: CartItem.MaxQuantity + 1));
         Assert.Equal(EDomainExceptionCode.CartItemQuantityExceeded, exception.Code);
@@ -84,7 +84,7 @@ public class CartTests
     [InlineData(-1)]
     public void AddItem_WithNonPositiveQuantity_IsRejected(int quantity)
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
 
         var exception = Assert.Throws<DomainException>(() => cart.AddItem(productId: 1, quantity));
         Assert.Equal(EDomainExceptionCode.InvalidCartItemQuantity, exception.Code);
@@ -96,7 +96,7 @@ public class CartTests
     [InlineData(-1)]
     public void AddItem_WithNonPositiveQuantityForProductAlreadyInCart_IsRejected(int quantity)
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
         cart.AddItem(productId: 1, quantity: 5);
 
         var exception = Assert.Throws<DomainException>(() => cart.AddItem(productId: 1, quantity));
@@ -107,7 +107,7 @@ public class CartTests
     [Fact]
     public void AddItem_WhenSumReachesMax_IncreasesQuantity()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
         cart.AddItem(productId: 1, quantity: CartItem.MaxQuantity - 1);
 
         cart.AddItem(productId: 1, quantity: 1);
@@ -118,7 +118,7 @@ public class CartTests
     [Fact]
     public void AddItem_WhenSumExceedsMax_IsRejected()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
         cart.AddItem(productId: 1, quantity: CartItem.MaxQuantity - 1);
 
         var exception = Assert.Throws<DomainException>(() => cart.AddItem(productId: 1, quantity: 2));
@@ -129,7 +129,7 @@ public class CartTests
     [Fact]
     public void AddItem_WhenSumWouldOverflow_IsRejected()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
         cart.AddItem(productId: 1, quantity: 1);
 
         var exception = Assert.Throws<DomainException>(() => cart.AddItem(productId: 1, quantity: int.MaxValue));
@@ -140,7 +140,7 @@ public class CartTests
     [Fact]
     public void UpdateItemQuantity_ReplacesQuantity()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
         cart.AddItem(productId: 1, quantity: 5);
 
         cart.UpdateItemQuantity(productId: 1, quantity: 2);
@@ -151,7 +151,7 @@ public class CartTests
     [Fact]
     public void UpdateItemQuantity_WithMaxQuantity_ReplacesQuantity()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
         cart.AddItem(productId: 1, quantity: 5);
 
         cart.UpdateItemQuantity(productId: 1, quantity: CartItem.MaxQuantity);
@@ -162,7 +162,7 @@ public class CartTests
     [Fact]
     public void UpdateItemQuantity_WithQuantityAboveMax_IsRejected()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
         cart.AddItem(productId: 1, quantity: 5);
 
         var exception = Assert.Throws<DomainException>(() => cart.UpdateItemQuantity(productId: 1, quantity: CartItem.MaxQuantity + 1));
@@ -175,7 +175,7 @@ public class CartTests
     [InlineData(-1)]
     public void UpdateItemQuantity_WithNonPositiveQuantity_IsRejected(int quantity)
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
         cart.AddItem(productId: 1, quantity: 5);
 
         var exception = Assert.Throws<DomainException>(() => cart.UpdateItemQuantity(productId: 1, quantity));
@@ -186,7 +186,7 @@ public class CartTests
     [Fact]
     public void UpdateItemQuantity_WithProductNotInCart_IsRejected()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
         cart.AddItem(productId: 1, quantity: 5);
 
         var exception = Assert.Throws<DomainException>(() => cart.UpdateItemQuantity(productId: 2, quantity: 3));
@@ -197,7 +197,7 @@ public class CartTests
     [Fact]
     public void RemoveItem_RemovesOnlyThatItem()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
         cart.AddItem(productId: 1, quantity: 2);
         cart.AddItem(productId: 2, quantity: 1);
 
@@ -209,7 +209,7 @@ public class CartTests
     [Fact]
     public void RemoveItem_WithProductNotInCart_IsRejected()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
         cart.AddItem(productId: 1, quantity: 2);
 
         var exception = Assert.Throws<DomainException>(() => cart.RemoveItem(productId: 2));
@@ -220,7 +220,7 @@ public class CartTests
     [Fact]
     public void Clear_RemovesAllItems()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
         cart.AddItem(productId: 1, quantity: 2);
         cart.AddItem(productId: 2, quantity: 1);
 
@@ -232,7 +232,7 @@ public class CartTests
     [Fact]
     public void EnsureNotEmpty_WhenEmpty_IsRejected()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
 
         var exception = Assert.Throws<DomainException>(() => cart.EnsureNotEmpty());
         Assert.Equal(EDomainExceptionCode.CartEmpty, exception.Code);
@@ -241,7 +241,7 @@ public class CartTests
     [Fact]
     public void EnsureNotEmpty_WhenHasItems_DoesNotThrow()
     {
-        var cart = CartSeeds.Create();
+        var cart = CartTestData.Create();
         cart.AddItem(productId: 1, quantity: 1);
 
         var exception = Record.Exception(() => cart.EnsureNotEmpty());

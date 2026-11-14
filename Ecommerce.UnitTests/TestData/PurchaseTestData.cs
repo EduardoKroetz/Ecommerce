@@ -1,6 +1,6 @@
-namespace Ecommerce.UnitTests.Seeds;
+namespace Ecommerce.UnitTests.TestData;
 
-public static class PurchaseSeeds
+public static class PurchaseTestData
 {
     public static Purchase Create(
         int customerId = 1,
@@ -8,7 +8,7 @@ public static class PurchaseSeeds
         List<Order>? orders = null,
         DateTime createdAt = default)
     {
-        orders ??= [OrderSeeds.Create(sellerId: 1), OrderSeeds.Create(sellerId: 2)];
+        orders ??= [OrderTestData.Create(sellerId: 1), OrderTestData.Create(sellerId: 2)];
 
         return new Purchase(customerId, paymentMethod, orders, createdAt);
     }

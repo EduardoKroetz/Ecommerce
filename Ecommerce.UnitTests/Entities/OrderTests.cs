@@ -7,7 +7,7 @@ public class OrderTests
     [Fact]
     public void Create_StartsAwaitingPayment()
     {
-        var order = OrderSeeds.Create();
+        var order = OrderTestData.Create();
 
         Assert.Equal(EOrderStatus.AwaitingPayment, order.Status);
     }
@@ -15,7 +15,7 @@ public class OrderTests
     [Fact]
     public void Create_WithoutItems_IsRejected()
     {
-        var exception = Assert.Throws<DomainException>(() => OrderSeeds.Create(items: []));
+        var exception = Assert.Throws<DomainException>(() => OrderTestData.Create(items: []));
         Assert.Equal(EDomainExceptionCode.OrderWithoutItems, exception.Code);
     }
 
@@ -28,7 +28,7 @@ public class OrderTests
             new(productId: 2, productName: "Test Product 2", unitPrice: 20.0m, quantity: 1)
         };
 
-        var order = OrderSeeds.Create(items: items);
+        var order = OrderTestData.Create(items: items);
 
         Assert.Equal(40.0m, order.TotalAmount);
     }
@@ -42,7 +42,7 @@ public class OrderTests
             new(productId: 1, productName: "Test Product", unitPrice: 10.0m, quantity: 3)
         };
 
-        var exception = Assert.Throws<DomainException>(() => OrderSeeds.Create(items: items));
+        var exception = Assert.Throws<DomainException>(() => OrderTestData.Create(items: items));
         Assert.Equal(EDomainExceptionCode.OrderWithDuplicatedItems, exception.Code);
     }
 
@@ -51,7 +51,7 @@ public class OrderTests
     {
         var createdAt = new DateTime(2026, 1, 15, 10, 30, 0, DateTimeKind.Utc);
 
-        var order = OrderSeeds.Create(sellerId: 7, createdAt: createdAt);
+        var order = OrderTestData.Create(sellerId: 7, createdAt: createdAt);
 
         Assert.Equal(7, order.SellerId);
         Assert.Equal(createdAt, order.CreatedAt);
@@ -60,7 +60,7 @@ public class OrderTests
     [Fact]
     public void Create_IsNotAssignedToPurchase()
     {
-        var order = OrderSeeds.Create();
+        var order = OrderTestData.Create();
 
         Assert.Equal(0, order.PurchaseId);
     }
@@ -72,7 +72,7 @@ public class OrderTests
         {
             new(productId: 1, productName: "Test Product 1", unitPrice: 10.0m, quantity: 2)
         };
-        var order = OrderSeeds.Create(items: items);
+        var order = OrderTestData.Create(items: items);
 
         items.Add(new(productId: 2, productName: "Test Product 2", unitPrice: 20.0m, quantity: 1));
 
@@ -100,7 +100,7 @@ public class OrderTests
     [Fact]
     public void AssignToPurchase_SetsPurchaseId()
     {
-        var order = OrderSeeds.Create();
+        var order = OrderTestData.Create();
 
         order.AssignToPurchase(5);
 
@@ -112,7 +112,7 @@ public class OrderTests
     [InlineData(-1)]
     public void AssignToPurchase_WithNonPositiveId_Throws(int purchaseId)
     {
-        var order = OrderSeeds.Create();
+        var order = OrderTestData.Create();
 
         Assert.Throws<ArgumentOutOfRangeException>(() => order.AssignToPurchase(purchaseId));
         Assert.Equal(0, order.PurchaseId);
@@ -121,7 +121,7 @@ public class OrderTests
     [Fact]
     public void AssignToPurchase_WhenAlreadyAssigned_Throws()
     {
-        var order = OrderSeeds.Create();
+        var order = OrderTestData.Create();
         order.AssignToPurchase(5);
 
         Assert.Throws<InvalidOperationException>(() => order.AssignToPurchase(6));
@@ -131,7 +131,7 @@ public class OrderTests
     [Fact]
     public void MarkAsPaid_WhenAwaitingPayment_MovesToAwaitingShipment()
     {
-        var order = OrderSeeds.Create();
+        var order = OrderTestData.Create();
 
         order.MarkAsPaid();
 
@@ -145,7 +145,7 @@ public class OrderTests
     [InlineData(EOrderStatus.Cancelled)]
     public void MarkAsPaid_WhenNotAwaitingPayment_IsRejected(EOrderStatus status)
     {
-        var order = OrderSeeds.CreateWithStatus(status);
+        var order = OrderTestData.CreateWithStatus(status);
 
         var exception = Assert.Throws<DomainException>(() => order.MarkAsPaid());
         Assert.Equal(EDomainExceptionCode.InvalidOrderStatus, exception.Code);
@@ -156,7 +156,7 @@ public class OrderTests
     [Fact]
     public void Cancel_WhenAwaitingPayment_MovesToCancelled()
     {
-        var order = OrderSeeds.Create();
+        var order = OrderTestData.Create();
 
         order.Cancel();
 
@@ -166,7 +166,7 @@ public class OrderTests
     [Fact]
     public void Cancel_WhenAlreadyCancelled_IsRejected()
     {
-        var order = OrderSeeds.CreateWithStatus(EOrderStatus.Cancelled);
+        var order = OrderTestData.CreateWithStatus(EOrderStatus.Cancelled);
 
         var exception = Assert.Throws<DomainException>(() => order.Cancel());
         Assert.Equal(EDomainExceptionCode.OrderAlreadyCancelled, exception.Code);
@@ -179,7 +179,7 @@ public class OrderTests
     [InlineData(EOrderStatus.Delivered)]
     public void Cancel_WhenAlreadyPaid_IsRejected(EOrderStatus status)
     {
-        var order = OrderSeeds.CreateWithStatus(status);
+        var order = OrderTestData.CreateWithStatus(status);
 
         var exception = Assert.Throws<DomainException>(() => order.Cancel());
         Assert.Equal(EDomainExceptionCode.InvalidOrderStatus, exception.Code);
@@ -190,7 +190,7 @@ public class OrderTests
     [Fact]
     public void Ship_WhenAwaitingShipment_MovesToShipped()
     {
-        var order = OrderSeeds.CreateWithStatus(EOrderStatus.AwaitingShipment);
+        var order = OrderTestData.CreateWithStatus(EOrderStatus.AwaitingShipment);
 
         order.Ship();
 
@@ -204,7 +204,7 @@ public class OrderTests
     [InlineData(EOrderStatus.Cancelled)]
     public void Ship_WhenNotAwaitingShipment_IsRejected(EOrderStatus status)
     {
-        var order = OrderSeeds.CreateWithStatus(status);
+        var order = OrderTestData.CreateWithStatus(status);
 
         var exception = Assert.Throws<DomainException>(() => order.Ship());
         Assert.Equal(EDomainExceptionCode.InvalidOrderStatus, exception.Code);
@@ -215,7 +215,7 @@ public class OrderTests
     [Fact]
     public void ConfirmDelivery_WhenShipped_MovesToDelivered()
     {
-        var order = OrderSeeds.CreateWithStatus(EOrderStatus.Shipped);
+        var order = OrderTestData.CreateWithStatus(EOrderStatus.Shipped);
 
         order.ConfirmDelivery();
 
@@ -229,7 +229,7 @@ public class OrderTests
     [InlineData(EOrderStatus.Cancelled)]
     public void ConfirmDelivery_WhenNotShipped_IsRejected(EOrderStatus status)
     {
-        var order = OrderSeeds.CreateWithStatus(status);
+        var order = OrderTestData.CreateWithStatus(status);
 
         var exception = Assert.Throws<DomainException>(() => order.ConfirmDelivery());
         Assert.Equal(EDomainExceptionCode.InvalidOrderStatus, exception.Code);

@@ -1,6 +1,6 @@
-﻿namespace Ecommerce.UnitTests.Seeds;
+﻿namespace Ecommerce.UnitTests.TestData;
 
-public class ProductSeeds
+public class ProductTestData
 {
     public static Product Create(
         int sellerId = 1,

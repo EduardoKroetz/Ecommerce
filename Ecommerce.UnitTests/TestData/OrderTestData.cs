@@ -1,6 +1,6 @@
-﻿namespace Ecommerce.UnitTests.Seeds;
+﻿namespace Ecommerce.UnitTests.TestData;
 
-public static class OrderSeeds
+public static class OrderTestData
 {
     public static Order Create(int sellerId = 1, List<OrderItem>? items = null, DateTime createdAt = default)
     {

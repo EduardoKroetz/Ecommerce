@@ -1,6 +1,6 @@
-namespace Ecommerce.UnitTests.Seeds;
+namespace Ecommerce.UnitTests.TestData;
 
-public static class CartSeeds
+public static class CartTestData
 {
     // Starts empty: items go in through AddItem, the behavior under test
     public static Cart Create(int customerId = 1, DateTime createdAt = default)
