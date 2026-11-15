@@ -18,6 +18,7 @@ O comportamento crítico está em três lugares:
 - **Domínio com testes unitários; services com testes de integração contra Postgres real.**
 
 ## Decisão
+- **Critério:** cada comportamento é testado no nível mais barato em que pode ser observado. A integração não repete regra que o domínio já garante: prova só o que depende do banco, da transação ou da composição.
 - **Domínio → testes unitários.** Entidades com regra são testadas pela API pública, sem banco e sem mocks.
 - **Services → testes de integração contra Postgres real.** O banco é uma dependência gerenciada (só a aplicação o acessa): a interação com ele é detalhe de implementação, então usa-se a instância real, nunca mock.
 - **Repositórios não têm testes dedicados:** são exercitados pelos testes dos services. O escopo por papel (`For{Papel}`), os filtros e a ordenação também são verificados pelos services, com cenários de outro usuário.

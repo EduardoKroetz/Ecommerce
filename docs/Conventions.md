@@ -91,6 +91,9 @@ Teste: se a rota mudar e o nome de uma representação precisar mudar junto, ela
 ## Testes
 Estratégia (o que testar em cada nível): ADR 0021.
 
+- Cada comportamento é testado no nível mais barato em que pode ser observado. Ex.: a idempotência de
+  `Product.AddCategory` é unitária; a integração só prova que o vínculo é gravado e removido.
+
 ### Organização
 - `Ecommerce.UnitTests` testa o domínio; `Ecommerce.IntegrationTests` testa services e API.
 - Uma classe `{Entidade}Tests` por agregado. Itens do agregado são testados na classe da raiz
@@ -102,6 +105,7 @@ Estratégia (o que testar em cada nível): ADR 0021.
 - Condição: `With...` para a entrada (`Create_WithoutItems`), `When...` para o estado (`MarkAsPaid_WhenAwaitingPayment`).
   Omitida quando o cenário é o caso válido padrão (`Create_StartsAwaitingPayment`).
 - Resultado: `IsRejected` para rejeição do domínio, `MovesTo{Status}` para transição de status.
+  Exceções da aplicação: `IsNotFound`, `IsUnauthorized`, `IsConflict`.
   Nos demais casos, descreve o que é verificado (`Create_TotalIsSumOfItemPriceTimesQuantity`).
 
 ### Estrutura
