@@ -1,10 +1,12 @@
 <Solution>
   <Folder Name="/Solution Items/">
+    <File Path="CLAUDE.md" />
     <File Path="docker-compose.yml" />
     <File Path="README.md" />
   </Folder>
   <Folder Name="/docs/">
     <File Path="docs/Conventions.md" />
+    <File Path="docs/domain-model.md" />
   </Folder>
   <Folder Name="/docs/adr/">
     <File Path="docs/adr/0001-uso-de-postgres.md" />
