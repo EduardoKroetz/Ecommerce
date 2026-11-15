@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Time.Testing;
 using Npgsql;
 using Respawn;
 using Respawn.Graph;
@@ -27,7 +26,7 @@ public class DatabaseFixture : IAsyncLifetime
     public ServiceProvider Services { get; private set; } = null!;
 
     // Shared clock that replaces TimeProvider, so tests control the current date
-    public FakeTimeProvider Time { get; } = new();
+    public TestTimeProvider Time { get; } = new();
 
     // xUnit calls this once, before the first test of the collection
     public async Task InitializeAsync()

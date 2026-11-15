@@ -27,7 +27,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
     protected TestData TestData { get; }
 
     // Lets a test move the clock (e.g. Time.Advance)
-    protected FakeTimeProvider Time => _fixture.Time;
+    protected FakeTimeProvider Time => _fixture.Time.Current;
 
     // xUnit calls this before every test: each one starts from an empty database and the same clock,
     // without depending on what the previous test left behind
@@ -35,7 +35,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
     {
         await _fixture.ResetAsync();
 
-        _fixture.Time.SetUtcNow(Now);
+        _fixture.Time.Reset(Now);
     }
 
     // xUnit calls this after every test: releases the scopes opened during it
