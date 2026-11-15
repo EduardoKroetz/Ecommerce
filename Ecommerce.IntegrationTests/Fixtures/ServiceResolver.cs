@@ -1,3 +1,4 @@
+using Ecommerce.Application.DTOs.Auth;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ecommerce.IntegrationTests.Fixtures;
@@ -20,6 +21,14 @@ public sealed class ServiceResolver(DatabaseFixture fixture) : IAsyncDisposable
 
         return scope.ServiceProvider.GetRequiredService<T>();
     }
+
+    // Acting as a registered seller (who is also a customer)
+    public T Get<T>(RegisterSellerResponse seller) where T : notnull =>
+        Get<T>(customerId: seller.CustomerId, sellerId: seller.SellerId, userId: seller.UserId);
+
+    // Acting as a registered customer
+    public T Get<T>(RegisterCustomerResponse customer) where T : notnull =>
+        Get<T>(customerId: customer.CustomerId, userId: customer.UserId);
 
     public async ValueTask DisposeAsync()
     {
