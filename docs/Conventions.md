@@ -40,6 +40,10 @@
   Até 3, parâmetros diretos (`CreateAsync(userId)`).
 - Data atual vem do `TimeProvider` injetado, via `timeProvider.GetUtcDateTime()` (extensão em
   `Application/Extensions`). Nunca `DateTime.UtcNow`. O service passa a data pronta para a entidade.
+- Todas as leituras vêm antes de abrir a transação; dentro dela, só escritas. A simulação de concorrência dos testes
+  de integração depende disso: ela roda a requisição concorrente na abertura da transação, depois das leituras e antes
+  de qualquer trava (`ConcurrentRequestInterceptor`). Exceção: o cadastro, em que o `UserManager.CreateAsync` lê e
+  grava dentro da transação (ADR 0020).
 
 ## Nomenclatura de DTOs
 
@@ -105,7 +109,8 @@ Estratégia (o que testar em cada nível): ADR 0021.
 - Condição: `With...` para a entrada (`Create_WithoutItems`), `When...` para o estado (`MarkAsPaid_WhenAwaitingPayment`).
   Omitida quando o cenário é o caso válido padrão (`Create_StartsAwaitingPayment`).
 - Resultado: `IsRejected` para rejeição do domínio, `MovesTo{Status}` para transição de status.
-  Exceções da aplicação: `IsNotFound`, `IsUnauthorized`, `IsConflict`.
+  Exceções da aplicação: `IsNotFound`, `IsUnauthorized`, `IsConflict`, `IsInvalid` (`ValidationException`),
+  `IsConcurrencyConflict` (`DbUpdateConcurrencyException`).
   Nos demais casos, descreve o que é verificado (`Create_TotalIsSumOfItemPriceTimesQuantity`).
 
 ### Estrutura
@@ -123,12 +128,17 @@ Estratégia (o que testar em cada nível): ADR 0021.
 - Erro de programação (`InvalidOperationException`, `ArgumentOutOfRangeException`) é verificado pelo tipo.
 
 ### Integração
-- O service é obtido por `Services.Get<T>(customerId, sellerId)`, do container de DI, com `ICurrentUserProvider` e
-  `TimeProvider` substituídos por stubs.
+- O service é obtido por `Services.Get<T>(...)`, do container de DI, com `ICurrentUserProvider` e `TimeProvider`
+  substituídos por stubs.
+- Cada teste tem um customer e um seller padrão (`Customer`, `Seller`), pessoas diferentes. Sem usuário,
+  `Services.Get<T>()` e o `TestData` usam os padrão; anônimo é `Services.Get<T>(null)`, explícito. O usuário é
+  informado quando o papel é o que o teste verifica (`Cancel_AsSeller`, `Ship_WithoutSeller`), e outros usuários são
+  criados explicitamente (`TestData.CustomerAsync()`).
 - Cenários são montados por `TestData` (`TestData.SellerAsync()`, `TestData.ProductAsync(...)`), com parâmetros opcionais
   e valores padrão válidos, também no Act. Nada de métodos privados de montagem dentro da classe de teste.
 - Verificação: por padrão, pela operação pública de leitura correspondente (`GetByIdAsync` do service). `QueryAsync`
   (sem tracking, em escopo novo) só para efeitos que nenhuma operação de leitura expõe: versão de concorrência e
   estado interno (ex.: `SellerId` do produto).
 - Os dados são limpos com Respawn antes de cada teste.
-- Conflito de concorrência é provocado pelo interceptor do EF, nunca por chamadas paralelas.
+- Conflito de concorrência é provocado por `BeforeNextWrite`, que roda a requisição concorrente no primeiro ponto de
+  escrita do service testado (interceptor do EF), nunca por chamadas paralelas.
