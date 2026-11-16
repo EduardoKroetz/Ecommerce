@@ -8,10 +8,12 @@ using Ecommerce.Domain.Enums;
 
 namespace Ecommerce.IntegrationTests.Fixtures;
 
-// Builds scenarios through the public services, with valid defaults: a test informs only what matters to it
-public sealed class TestData(ServiceResolver services)
+// Builds scenarios through the public services, with valid defaults: a test informs only what matters to it.
+// Without a customer or seller, uses the default ones of the test (DefaultTestUsers).
+public sealed class TestData(ServiceResolver services, DefaultTestUsers users)
 {
-    private const string DefaultPassword = "Test@1234";
+    // Public so login tests can reuse the credentials of a registered user
+    public const string DefaultPassword = "Test@1234";
 
     // Keeps generated names and emails unique within a test
     private int _sequence;
@@ -20,7 +22,8 @@ public sealed class TestData(ServiceResolver services)
     {
         var sequence = ++_sequence;
 
-        return services.Get<AuthService>().RegisterSellerAsync(new RegisterSellerRequest
+        // Registration is an anonymous request
+        return services.Get<AuthService>(null).RegisterSellerAsync(new RegisterSellerRequest
         {
             Name = name ?? $"Test Seller {sequence}",
             Email = email ?? $"seller{sequence}@test.com",
@@ -32,7 +35,7 @@ public sealed class TestData(ServiceResolver services)
     {
         var sequence = ++_sequence;
 
-        return services.Get<AuthService>().RegisterCustomerAsync(new RegisterCustomerRequest
+        return services.Get<AuthService>(null).RegisterCustomerAsync(new RegisterCustomerRequest
         {
             Name = name ?? $"Test Customer {sequence}",
             Email = email ?? $"customer{sequence}@test.com",
@@ -40,7 +43,6 @@ public sealed class TestData(ServiceResolver services)
         });
     }
 
-    // Without a seller, creates one: the product always needs an owner
     public async Task<ProductResponse> ProductAsync(
         RegisterSellerResponse? seller = null,
         string name = "Test Product",
@@ -48,7 +50,7 @@ public sealed class TestData(ServiceResolver services)
         decimal price = 10.0m,
         int stockBalance = 100)
     {
-        seller ??= await SellerAsync();
+        seller ??= users.Seller;
 
         return await services.Get<ProductService>(seller).CreateAsync(new CreateProductRequest
         {
@@ -69,7 +71,7 @@ public sealed class TestData(ServiceResolver services)
 
     public async Task<CartResponse> CartItemAsync(RegisterCustomerResponse? customer = null, ProductResponse? product = null, int quantity = 1)
     {
-        customer ??= await CustomerAsync();
+        customer ??= users.Customer;
         product ??= await ProductAsync();
 
         return await services.Get<CartService>(customer).AddToCartAsync(new AddCartItemRequest
@@ -85,7 +87,7 @@ public sealed class TestData(ServiceResolver services)
         IEnumerable<ProductResponse>? products = null,
         EPaymentMethod paymentMethod = EPaymentMethod.PIX)
     {
-        customer ??= await CustomerAsync();
+        customer ??= users.Customer;
         products ??= [await ProductAsync()];
 
         foreach (var product in products)
@@ -95,5 +97,17 @@ public sealed class TestData(ServiceResolver services)
         {
             PaymentMethod = paymentMethod
         });
+    }
+
+    // Read back after paying, so the orders come with their new status
+    public async Task<PurchaseResponse> PaidPurchaseAsync(RegisterCustomerResponse? customer = null, IEnumerable<ProductResponse>? products = null)
+    {
+        customer ??= users.Customer;
+
+        var purchase = await PurchaseAsync(customer, products);
+
+        await services.Get<PurchaseService>(customer).PayAsync(purchase.Id);
+
+        return await services.Get<PurchaseService>(customer).GetByIdAsync(purchase.Id);
     }
 }

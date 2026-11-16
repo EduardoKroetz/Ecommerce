@@ -2,6 +2,7 @@ using Ecommerce.Application.Extensions;
 using Ecommerce.Application.Interfaces.Infra;
 using Ecommerce.Infra.Data;
 using Ecommerce.Infra.Extensions;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +28,9 @@ public class DatabaseFixture : IAsyncLifetime
 
     // Shared clock that replaces TimeProvider, so tests control the current date
     public TestTimeProvider Time { get; } = new();
+
+    // Attached to every DbContext; a test sets the request through IntegrationTestBase.BeforeNextWrite
+    public ConcurrentRequestInterceptor ConcurrentRequests { get; } = new();
 
     // xUnit calls this once, before the first test of the collection
     public async Task InitializeAsync()
@@ -95,6 +99,13 @@ public class DatabaseFixture : IAsyncLifetime
         services.AddScoped<TestCurrentUserProvider>();
         services.Replace(ServiceDescriptor.Scoped<ICurrentUserProvider>(sp => sp.GetRequiredService<TestCurrentUserProvider>()));
         services.Replace(ServiceDescriptor.Singleton<TimeProvider>(Time));
+
+        // Test-only: the hash strength isn't under test, and the default 100,000 iterations made each registration
+        // cost ~58 ms, two of them in every test (the default users)
+        services.Configure<PasswordHasherOptions>(options => options.IterationCount = 1);
+
+        // Added to the options registered by AddInfrastructure, without touching production code
+        services.ConfigureDbContext<AppDbContext>((_, options) => options.AddInterceptors(ConcurrentRequests));
 
         // Fails at startup if a service has a missing dependency, instead of in the middle of a test
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
