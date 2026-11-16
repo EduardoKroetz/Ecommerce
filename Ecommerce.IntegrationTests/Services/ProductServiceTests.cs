@@ -11,9 +11,7 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     [Fact]
     public async Task Create_PersistsProductForCurrentSeller()
     {
-        var seller = await TestData.SellerAsync();
-
-        var created = await TestData.ProductAsync(seller, name: "Test Product", price: 10.0m, stockBalance: 5);
+        var created = await TestData.ProductAsync(Seller, name: "Test Product", price: 10.0m, stockBalance: 5);
 
         var product = await Services.Get<ProductService>().GetByIdAsync(created.Id);
         Assert.Equal("Test Product", product.Name);
@@ -22,14 +20,13 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
         Assert.Equal(Now.UtcDateTime, product.CreatedAt);
 
         var sellerId = await QueryAsync(db => db.Products.Where(p => p.Id == created.Id).Select(p => p.SellerId).SingleAsync());
-        Assert.Equal(seller.SellerId, sellerId);
+        Assert.Equal(Seller.SellerId, sellerId);
     }
 
     [Fact]
     public async Task Create_WithoutSeller_IsUnauthorized()
     {
-        var customer = await TestData.CustomerAsync();
-        var service = Services.Get<ProductService>(customer);
+        var service = Services.Get<ProductService>(Customer);
 
         await Assert.ThrowsAsync<UnauthorizedException>(() => service.CreateAsync(new CreateProductRequest { Name = "Test Product", Price = 10.0m, StockBalance = 5 }));
 
@@ -48,9 +45,8 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     [Fact]
     public async Task Search_WithName_ReturnsProductsContainingNameIgnoringCase()
     {
-        var seller = await TestData.SellerAsync();
-        var notebook = await TestData.ProductAsync(seller, name: "Notebook Dell");
-        await TestData.ProductAsync(seller, name: "Mouse Logitech");
+        var notebook = await TestData.ProductAsync(name: "Notebook Dell");
+        await TestData.ProductAsync(name: "Mouse Logitech");
 
         var result = await Services.Get<ProductService>().SearchAsync(new SearchProductsQuery { Name = "note" });
 
@@ -60,10 +56,9 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     [Fact]
     public async Task Search_WithCategories_ReturnsProductsInAnyOfThem()
     {
-        var seller = await TestData.SellerAsync();
-        var (first, second, third) = (await TestData.ProductAsync(seller), await TestData.ProductAsync(seller), await TestData.ProductAsync(seller));
+        var (first, second, third) = (await TestData.ProductAsync(), await TestData.ProductAsync(), await TestData.ProductAsync());
         var (firstCategory, secondCategory, thirdCategory) = (await TestData.CategoryAsync(), await TestData.CategoryAsync(), await TestData.CategoryAsync());
-        var sellerService = Services.Get<ProductService>(seller);
+        var sellerService = Services.Get<ProductService>(Seller);
         await sellerService.AddCategoryAsync(first.Id, firstCategory.Id);
         await sellerService.AddCategoryAsync(second.Id, secondCategory.Id);
         await sellerService.AddCategoryAsync(third.Id, thirdCategory.Id);
@@ -76,10 +71,9 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     [Fact]
     public async Task Search_WithPriceRange_IncludesBounds()
     {
-        var seller = await TestData.SellerAsync();
-        var cheap = await TestData.ProductAsync(seller, price: 10.0m);
-        var middle = await TestData.ProductAsync(seller, price: 20.0m);
-        await TestData.ProductAsync(seller, price: 30.0m);
+        var cheap = await TestData.ProductAsync(price: 10.0m);
+        var middle = await TestData.ProductAsync(price: 20.0m);
+        await TestData.ProductAsync(price: 30.0m);
 
         var result = await Services.Get<ProductService>().SearchAsync(new SearchProductsQuery { StartPrice = 10.0m, EndPrice = 20.0m });
 
@@ -91,10 +85,9 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     [InlineData("unknown")]
     public async Task Search_WithoutKnownSort_OrdersByNewestFirst(string? sort)
     {
-        var seller = await TestData.SellerAsync();
-        var oldest = await TestData.ProductAsync(seller);
+        var oldest = await TestData.ProductAsync();
         Time.Advance(TimeSpan.FromMinutes(1));
-        var newest = await TestData.ProductAsync(seller);
+        var newest = await TestData.ProductAsync();
 
         var result = await Services.Get<ProductService>().SearchAsync(new SearchProductsQuery { Sort = sort });
 
@@ -108,12 +101,11 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     [InlineData(SearchProductsQuery.SortByCreatedAtAsc, "Cherry,Apple,Banana")]
     public async Task Search_WithSort_OrdersAccordingly(string sort, string expectedNames)
     {
-        var seller = await TestData.SellerAsync();
-        await TestData.ProductAsync(seller, name: "Cherry", price: 20.0m);
+        await TestData.ProductAsync(name: "Cherry", price: 20.0m);
         Time.Advance(TimeSpan.FromMinutes(1));
-        await TestData.ProductAsync(seller, name: "Apple", price: 30.0m);
+        await TestData.ProductAsync(name: "Apple", price: 30.0m);
         Time.Advance(TimeSpan.FromMinutes(1));
-        await TestData.ProductAsync(seller, name: "Banana", price: 10.0m);
+        await TestData.ProductAsync(name: "Banana", price: 10.0m);
 
         var result = await Services.Get<ProductService>().SearchAsync(new SearchProductsQuery { Sort = sort });
 
@@ -123,9 +115,8 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     [Fact]
     public async Task Search_WithTiedSortValues_OrdersById()
     {
-        var seller = await TestData.SellerAsync();
-        var first = await TestData.ProductAsync(seller, price: 10.0m);
-        var second = await TestData.ProductAsync(seller, price: 10.0m);
+        var first = await TestData.ProductAsync(price: 10.0m);
+        var second = await TestData.ProductAsync(price: 10.0m);
 
         var result = await Services.Get<ProductService>().SearchAsync(new SearchProductsQuery { Sort = SearchProductsQuery.SortByPriceAsc });
 
@@ -135,11 +126,10 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     [Fact]
     public async Task Search_WithPagination_ReturnsRequestedPageAndTotals()
     {
-        var seller = await TestData.SellerAsync();
         var products = new List<ProductResponse>();
         for (var i = 0; i < 5; i++)
         {
-            products.Add(await TestData.ProductAsync(seller));
+            products.Add(await TestData.ProductAsync());
             Time.Advance(TimeSpan.FromMinutes(1));
         }
 
@@ -153,10 +143,9 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     [Fact]
     public async Task Update_PersistsNameDescriptionAndPrice()
     {
-        var seller = await TestData.SellerAsync();
-        var created = await TestData.ProductAsync(seller);
+        var created = await TestData.ProductAsync();
 
-        await Services.Get<ProductService>(seller).UpdateAsync(created.Id, new UpdateProductRequest { Name = "Updated Product", Description = "Updated description", Price = 25.0m });
+        await Services.Get<ProductService>(Seller).UpdateAsync(created.Id, new UpdateProductRequest { Name = "Updated Product", Description = "Updated description", Price = 25.0m });
 
         var product = await Services.Get<ProductService>().GetByIdAsync(created.Id);
         Assert.Equal("Updated Product", product.Name);
@@ -178,16 +167,29 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
         Assert.Equal(10.0m, product.Price);
     }
 
+    // The update writes only the changed columns, so it doesn't overwrite the stock with the value it read
+    [Fact]
+    public async Task Update_WithConcurrentStockChange_KeepsStock()
+    {
+        var created = await TestData.ProductAsync(stockBalance: 10);
+        BeforeNextWrite(() => Services.Get<ProductService>(Seller).AdjustStockAsync(created.Id, new AdjustProductStockRequest { Quantity = 5 }));
+
+        await Services.Get<ProductService>(Seller).UpdateAsync(created.Id, new UpdateProductRequest { Name = "Updated Product", Price = 25.0m });
+
+        var product = await Services.Get<ProductService>().GetByIdAsync(created.Id);
+        Assert.Equal(15, product.StockBalance);
+        Assert.Equal(25.0m, product.Price);
+    }
+
     [Theory]
     [InlineData(5, 15)]
     [InlineData(-4, 6)]
     [InlineData(-10, 0)]
     public async Task AdjustStock_AppliesQuantityToStock(int quantity, int expectedStock)
     {
-        var seller = await TestData.SellerAsync();
-        var created = await TestData.ProductAsync(seller, stockBalance: 10);
+        var created = await TestData.ProductAsync(stockBalance: 10);
 
-        await Services.Get<ProductService>(seller).AdjustStockAsync(created.Id, new AdjustProductStockRequest { Quantity = quantity });
+        await Services.Get<ProductService>(Seller).AdjustStockAsync(created.Id, new AdjustProductStockRequest { Quantity = quantity });
 
         var product = await Services.Get<ProductService>().GetByIdAsync(created.Id);
         Assert.Equal(expectedStock, product.StockBalance);
@@ -196,9 +198,8 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     [Fact]
     public async Task AdjustStock_WhenResultWouldBeNegative_IsRejected()
     {
-        var seller = await TestData.SellerAsync();
-        var created = await TestData.ProductAsync(seller, stockBalance: 10);
-        var service = Services.Get<ProductService>(seller);
+        var created = await TestData.ProductAsync(stockBalance: 10);
+        var service = Services.Get<ProductService>(Seller);
 
         var exception = await Assert.ThrowsAsync<DomainException>(() => service.AdjustStockAsync(created.Id, new AdjustProductStockRequest { Quantity = -11 }));
         Assert.Equal(EDomainExceptionCode.InsufficientStock, exception.Code);
@@ -223,10 +224,9 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     [Fact]
     public async Task Delete_RemovesProduct()
     {
-        var seller = await TestData.SellerAsync();
-        var created = await TestData.ProductAsync(seller);
+        var created = await TestData.ProductAsync();
 
-        await Services.Get<ProductService>(seller).DeleteAsync(created.Id);
+        await Services.Get<ProductService>(Seller).DeleteAsync(created.Id);
 
         var service = Services.Get<ProductService>();
         await Assert.ThrowsAsync<NotFoundException>(() => service.GetByIdAsync(created.Id));
@@ -248,10 +248,9 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     [Fact]
     public async Task Delete_WhenProductHasOrders_IsConflict()
     {
-        var seller = await TestData.SellerAsync();
-        var created = await TestData.ProductAsync(seller);
+        var created = await TestData.ProductAsync();
         await TestData.PurchaseAsync(products: [created]);
-        var service = Services.Get<ProductService>(seller);
+        var service = Services.Get<ProductService>(Seller);
 
         await Assert.ThrowsAsync<ConflictException>(() => service.DeleteAsync(created.Id));
 
@@ -262,25 +261,22 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     [Fact]
     public async Task Delete_WhenProductIsInCart_RemovesCartItem()
     {
-        var seller = await TestData.SellerAsync();
-        var created = await TestData.ProductAsync(seller);
-        var customer = await TestData.CustomerAsync();
-        await TestData.CartItemAsync(customer, created);
+        var created = await TestData.ProductAsync();
+        await TestData.CartItemAsync(product: created);
 
-        await Services.Get<ProductService>(seller).DeleteAsync(created.Id);
+        await Services.Get<ProductService>(Seller).DeleteAsync(created.Id);
 
-        var cart = await Services.Get<CartService>(customer).GetCartDetailAsync();
+        var cart = await Services.Get<CartService>().GetCartDetailAsync();
         Assert.Empty(cart.Items);
     }
 
     [Fact]
     public async Task AddCategory_LinksCategoryToProduct()
     {
-        var seller = await TestData.SellerAsync();
-        var created = await TestData.ProductAsync(seller);
+        var created = await TestData.ProductAsync();
         var category = await TestData.CategoryAsync();
 
-        await Services.Get<ProductService>(seller).AddCategoryAsync(created.Id, category.Id);
+        await Services.Get<ProductService>(Seller).AddCategoryAsync(created.Id, category.Id);
 
         var product = await Services.Get<ProductService>().GetByIdAsync(created.Id);
         Assert.Equal(category.Id, Assert.Single(product.Categories).Id);
@@ -289,9 +285,8 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     [Fact]
     public async Task AddCategory_WithUnknownCategory_IsNotFound()
     {
-        var seller = await TestData.SellerAsync();
-        var created = await TestData.ProductAsync(seller);
-        var service = Services.Get<ProductService>(seller);
+        var created = await TestData.ProductAsync();
+        var service = Services.Get<ProductService>(Seller);
 
         await Assert.ThrowsAsync<NotFoundException>(() => service.AddCategoryAsync(created.Id, 999999));
     }
@@ -313,12 +308,11 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     [Fact]
     public async Task RemoveCategory_UnlinksCategory()
     {
-        var seller = await TestData.SellerAsync();
-        var created = await TestData.ProductAsync(seller);
+        var created = await TestData.ProductAsync();
         var category = await TestData.CategoryAsync();
-        await Services.Get<ProductService>(seller).AddCategoryAsync(created.Id, category.Id);
+        await Services.Get<ProductService>(Seller).AddCategoryAsync(created.Id, category.Id);
 
-        await Services.Get<ProductService>(seller).RemoveCategoryAsync(created.Id, category.Id);
+        await Services.Get<ProductService>(Seller).RemoveCategoryAsync(created.Id, category.Id);
 
         var product = await Services.Get<ProductService>().GetByIdAsync(created.Id);
         Assert.Empty(product.Categories);
@@ -327,9 +321,8 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     [Fact]
     public async Task RemoveCategory_WithUnknownCategory_IsNotFound()
     {
-        var seller = await TestData.SellerAsync();
-        var created = await TestData.ProductAsync(seller);
-        var service = Services.Get<ProductService>(seller);
+        var created = await TestData.ProductAsync();
+        var service = Services.Get<ProductService>(Seller);
 
         await Assert.ThrowsAsync<NotFoundException>(() => service.RemoveCategoryAsync(created.Id, 999999));
     }
@@ -337,10 +330,9 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     [Fact]
     public async Task RemoveCategory_WithProductFromAnotherSeller_IsNotFound()
     {
-        var seller = await TestData.SellerAsync();
-        var created = await TestData.ProductAsync(seller);
+        var created = await TestData.ProductAsync();
         var category = await TestData.CategoryAsync();
-        await Services.Get<ProductService>(seller).AddCategoryAsync(created.Id, category.Id);
+        await Services.Get<ProductService>(Seller).AddCategoryAsync(created.Id, category.Id);
         var otherSeller = await TestData.SellerAsync();
         var service = Services.Get<ProductService>(otherSeller);
 
