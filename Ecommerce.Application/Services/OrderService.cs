@@ -20,7 +20,7 @@ public class OrderService(
 
     public async Task<PagedResult<OrderResponse>> SearchSellerOrdersAsync(PaginationQuery query)
     {
-        var sellerId = userProvider.SellerId ?? throw new UnauthorizedException("User is not a seller.");
+        var sellerId = userProvider.SellerId ?? throw new ForbiddenException("User is not a seller.");
 
         return await orderRepository.SearchForSellerAsync(sellerId, query);
     }
@@ -60,7 +60,7 @@ public class OrderService(
 
     public async Task ShipAsync(int orderId)
     {
-        var sellerId = userProvider.SellerId ?? throw new UnauthorizedException("User is not a seller.");
+        var sellerId = userProvider.SellerId ?? throw new ForbiddenException("User is not a seller.");
 
         var order = await orderRepository.GetByIdForSellerAsync(orderId, sellerId)
             ?? throw new NotFoundException("Order not found.");

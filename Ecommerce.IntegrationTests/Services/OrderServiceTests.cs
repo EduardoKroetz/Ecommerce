@@ -46,11 +46,11 @@ public class OrderServiceTests(DatabaseFixture fixture) : IntegrationTestBase(fi
     }
 
     [Fact]
-    public async Task SearchSellerOrders_WithoutSeller_IsUnauthorized()
+    public async Task SearchSellerOrders_WithoutSeller_IsForbidden()
     {
         var service = Services.Get<OrderService>(Customer);
 
-        await Assert.ThrowsAsync<UnauthorizedException>(() => service.SearchSellerOrdersAsync(new PaginationQuery()));
+        await Assert.ThrowsAsync<ForbiddenException>(() => service.SearchSellerOrdersAsync(new PaginationQuery()));
     }
 
     [Fact]
@@ -259,12 +259,12 @@ public class OrderServiceTests(DatabaseFixture fixture) : IntegrationTestBase(fi
     }
 
     [Fact]
-    public async Task Ship_WithoutSeller_IsUnauthorized()
+    public async Task Ship_WithoutSeller_IsForbidden()
     {
         var purchase = await TestData.PaidPurchaseAsync();
         var service = Services.Get<OrderService>(Customer);
 
-        await Assert.ThrowsAsync<UnauthorizedException>(() => service.ShipAsync(purchase.Orders.Single().Id));
+        await Assert.ThrowsAsync<ForbiddenException>(() => service.ShipAsync(purchase.Orders.Single().Id));
     }
 
     [Fact]

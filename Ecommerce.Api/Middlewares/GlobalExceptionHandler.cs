@@ -5,7 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Ecommerce.Api.Middlewares;
 
-public class GlobalExceptionHandler(IProblemDetailsService problemDetailsService) : IExceptionHandler
+// Turns every exception into a ProblemDetails, so all error responses go through the same writer and JSON options
+public class GlobalExceptionHandler(IProblemDetailsService problemDetailsService, ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
@@ -16,20 +17,26 @@ public class GlobalExceptionHandler(IProblemDetailsService problemDetailsService
                 ["code"] = domainException.Code,
                 ["details"] = domainException.Details
             }),
-            ValidationException validationException => CreateProblemDetails(StatusCodes.Status400BadRequest, validationException.Message, new Dictionary<string, object?>
+            // Same shape as the automatic model validation ([ApiController]): errors grouped by field
+            ValidationException validationException => new ValidationProblemDetails(new Dictionary<string, string[]>(validationException.Errors))
             {
-                ["errors"] = validationException.Errors?.Select(e => new { code = e.Code, message = e.Message })
-            }),
+                Status = StatusCodes.Status400BadRequest,
+                Title = validationException.Message
+            },
             NotFoundException => CreateProblemDetails(StatusCodes.Status404NotFound, exception.Message),
             ConflictException => CreateProblemDetails(StatusCodes.Status409Conflict, exception.Message),
             DbUpdateConcurrencyException => CreateProblemDetails(StatusCodes.Status409Conflict, "The resource was changed by another request. Reload it and try again."),
             UnauthorizedException => CreateProblemDetails(StatusCodes.Status401Unauthorized, exception.Message),
-            _ => null
+            ForbiddenException => CreateProblemDetails(StatusCodes.Status403Forbidden, exception.Message),
+            // Unmapped: a bug or an infrastructure failure. Generic title, no exception details for the client.
+            // Not left to the default handler: its MVC writer writes nothing when [ApiController] is set on the assembly
+            _ => CreateProblemDetails(StatusCodes.Status500InternalServerError, "An unexpected error occurred.")
         };
 
-        // Unmapped exceptions fall through to the default handler (500 ProblemDetails)
-        if (problemDetails is null)
-            return false;
+        // A handled exception is no longer logged by the middleware (.NET 10): the expected ones (4xx) stay out of
+        // the log, the unexpected ones are logged here
+        if (problemDetails.Status == StatusCodes.Status500InternalServerError)
+            logger.LogError(exception, "Unhandled exception while processing {Method} {Path}", httpContext.Request.Method, httpContext.Request.Path);
 
         httpContext.Response.StatusCode = problemDetails.Status!.Value;
 

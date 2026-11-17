@@ -30,7 +30,9 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
 
         if (!result.Succeeded)
         {
-            var errors = result.Errors.Select(e => new ValidationError(e.Code, e.Description));
+            var errors = result.Errors
+                .GroupBy(e => GetRequestField(e.Code))
+                .ToDictionary(g => g.Key, g => g.Select(e => e.Description).ToArray());
 
             throw new ValidationException(errors);
         }
@@ -38,4 +40,12 @@ public class IdentityService(UserManager<ApplicationUser> userManager) : IIdenti
         return newUser;
     }
 
+    // Identity reports only a code, so the request field is derived from it: password rules start with "Password",
+    // and the user name is the email. Anything else is not tied to a field (empty key, as in the model validation)
+    private static string GetRequestField(string code) => code switch
+    {
+        _ when code.StartsWith("Password") => "Password",
+        _ when code.Contains("Email") || code.Contains("UserName") => "Email",
+        _ => string.Empty
+    };
 }

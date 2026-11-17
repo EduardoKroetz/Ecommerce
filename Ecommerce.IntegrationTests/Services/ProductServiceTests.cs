@@ -24,11 +24,11 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
     }
 
     [Fact]
-    public async Task Create_WithoutSeller_IsUnauthorized()
+    public async Task Create_WithoutSeller_IsForbidden()
     {
         var service = Services.Get<ProductService>(Customer);
 
-        await Assert.ThrowsAsync<UnauthorizedException>(() => service.CreateAsync(new CreateProductRequest { Name = "Test Product", Price = 10.0m, StockBalance = 5 }));
+        await Assert.ThrowsAsync<ForbiddenException>(() => service.CreateAsync(new CreateProductRequest { Name = "Test Product", Price = 10.0m, StockBalance = 5 }));
 
         var products = await Services.Get<ProductService>().SearchAsync(new SearchProductsQuery());
         Assert.Equal(0, products.TotalCount);

@@ -10,7 +10,7 @@ namespace Ecommerce.Api.Controllers;
 [Authorize]
 public class ProductsController(ProductService productService) : ControllerBase
 {
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     [AllowAnonymous]
     public async Task<IActionResult> GetProductById(int id)
     {
@@ -40,7 +40,7 @@ public class ProductsController(ProductService productService) : ControllerBase
             value: product);
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     [Authorize(Policy = Policies.RequireSeller)]
     public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpdateProductRequest request)
     {
@@ -49,7 +49,7 @@ public class ProductsController(ProductService productService) : ControllerBase
         return Ok(product);
     }
 
-    [HttpPatch("{id}/stock")]
+    [HttpPatch("{id:int}/stock")]
     [Authorize(Policy = Policies.RequireSeller)]
     public async Task<IActionResult> AdjustProductStock(int id, [FromBody] AdjustProductStockRequest request)
     {
@@ -58,7 +58,7 @@ public class ProductsController(ProductService productService) : ControllerBase
         return Ok(product);
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     [Authorize(Policy = Policies.RequireSeller)]
     public async Task<IActionResult> DeleteProduct(int id)
     {

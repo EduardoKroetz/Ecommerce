@@ -11,7 +11,7 @@ namespace Ecommerce.Api.Controllers;
 [Authorize]
 public class ProductCategoriesController(ProductCategoryService productCategoryService) : ControllerBase
 {
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     [AllowAnonymous]
     public async Task<IActionResult> GetProductCategoryById(int id)
     {
@@ -41,7 +41,7 @@ public class ProductCategoriesController(ProductCategoryService productCategoryS
             value: productCategory);
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     [Authorize(Policy = Policies.RequireSeller)]
     public async Task<IActionResult> UpdateProductCategory(int id, [FromBody] UpdateProductCategoryRequest request)
     {
@@ -50,7 +50,7 @@ public class ProductCategoriesController(ProductCategoryService productCategoryS
         return Ok(productCategory);
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     [Authorize(Policy = Policies.RequireSeller)]
     public async Task<IActionResult> DeleteProductCategory(int id)
     {

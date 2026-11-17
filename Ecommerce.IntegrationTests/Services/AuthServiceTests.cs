@@ -39,7 +39,8 @@ public class AuthServiceTests(DatabaseFixture fixture) : IntegrationTestBase(fix
     {
         await TestData.CustomerAsync(email: "customer@test.com");
 
-        await Assert.ThrowsAsync<ValidationException>(() => TestData.CustomerAsync(email: "customer@test.com"));
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => TestData.CustomerAsync(email: "customer@test.com"));
+        Assert.Equal(["Email"], exception.Errors.Keys);
 
         var customerCount = await QueryAsync(db => db.Customers.CountAsync(c => db.Users.Any(u => u.Id == c.UserId && u.Email == "customer@test.com")));
         Assert.Equal(1, customerCount);
@@ -48,7 +49,8 @@ public class AuthServiceTests(DatabaseFixture fixture) : IntegrationTestBase(fix
     [Fact]
     public async Task RegisterCustomer_WithWeakPassword_IsInvalid()
     {
-        await Assert.ThrowsAsync<ValidationException>(() => TestData.CustomerAsync(email: "customer@test.com", password: "ABC"));
+        var exception = await Assert.ThrowsAsync<ValidationException>(() => TestData.CustomerAsync(email: "customer@test.com", password: "ABC"));
+        Assert.Equal(["Password"], exception.Errors.Keys);
 
         var userExists = await QueryAsync(db => db.Users.AnyAsync(u => u.Email == "customer@test.com"));
         Assert.False(userExists);

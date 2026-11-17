@@ -15,7 +15,7 @@ public class ProductService(
     IUnitOfWork uow,
     TimeProvider timeProvider)
 {
-    private int CurrentSellerId => userProvider.SellerId ?? throw new UnauthorizedException("User is not a seller.");
+    private int CurrentSellerId => userProvider.SellerId ?? throw new ForbiddenException("User is not a seller.");
 
     public async Task<PagedResult<ProductResponse>> SearchAsync(SearchProductsQuery query)
     {

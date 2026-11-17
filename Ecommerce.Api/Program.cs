@@ -40,6 +40,12 @@ builder.Services
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
+// ProblemDetails written by the exception handler use these options, not the MVC ones above
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(Policies.RequireSeller, policy => policy.RequireClaim(AppClaimTypes.SellerId));
