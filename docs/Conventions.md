@@ -90,7 +90,7 @@ Teste: se a rota mudar e o nome de uma representação precisar mudar junto, ela
 - Constantes são `const` (exigência de argumentos de atributo), em PascalCase (`MaxQuantity`).
 - Toda invariante declarada no domínio é aplicada pela entidade. O DTO antecipa (400); a entidade garante (422).
 - Credenciais têm uma única fonte: `IdentityOptions` vêm de `PasswordPolicy`, e erros do
-  `IdentityResult` viram `ValidationException` (400).
+  `IdentityResult` viram `ValidationException` (400), agrupados por campo como a validação automática do DTO.
 
 ## Testes
 Estratégia (o que testar em cada nível): ADR 0021.
@@ -109,7 +109,7 @@ Estratégia (o que testar em cada nível): ADR 0021.
 - Condição: `With...` para a entrada (`Create_WithoutItems`), `When...` para o estado (`MarkAsPaid_WhenAwaitingPayment`).
   Omitida quando o cenário é o caso válido padrão (`Create_StartsAwaitingPayment`).
 - Resultado: `IsRejected` para rejeição do domínio, `MovesTo{Status}` para transição de status.
-  Exceções da aplicação: `IsNotFound`, `IsUnauthorized`, `IsConflict`, `IsInvalid` (`ValidationException`),
+  Exceções da aplicação: `IsNotFound`, `IsUnauthorized`, `IsForbidden`, `IsConflict`, `IsInvalid` (`ValidationException`),
   `IsConcurrencyConflict` (`DbUpdateConcurrencyException`).
   Nos demais casos, descreve o que é verificado (`Create_TotalIsSumOfItemPriceTimesQuantity`).
 
@@ -142,3 +142,6 @@ Estratégia (o que testar em cada nível): ADR 0021.
 - Os dados são limpos com Respawn antes de cada teste.
 - Conflito de concorrência é provocado por `BeforeNextWrite`, que roda a requisição concorrente no primeiro ponto de
   escrita do service testado (interceptor do EF), nunca por chamadas paralelas.
+- Testes de API (`Api/`, herdam `ApiTestBase`) cobrem só a borda: autenticação, autorização, validação dos DTOs,
+  mapeamento de exceções e serialização. Um caso por tipo de exceção; as regras ficam nos testes de service.
+  Organizados por assunto da borda (`AuthenticationTests`, `ValidationTests`), não por controller.

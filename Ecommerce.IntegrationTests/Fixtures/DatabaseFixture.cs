@@ -14,7 +14,7 @@ using Testcontainers.PostgreSql;
 
 namespace Ecommerce.IntegrationTests.Fixtures;
 
-// One Postgres container and one service provider for the whole suite (ADR 0021)
+// One Postgres container, one service provider and, for the API tests, one host for the whole suite (ADR 0021)
 public class DatabaseFixture : IAsyncLifetime
 {
     // Same major version as production (Neon)
@@ -32,12 +32,27 @@ public class DatabaseFixture : IAsyncLifetime
     // Attached to every DbContext; a test sets the request through IntegrationTestBase.BeforeNextWrite
     public ConcurrentRequestInterceptor ConcurrentRequests { get; } = new();
 
+    private ApiFactory? _api;
+
+    // Created on first use, so only the API tests pay for starting the host
+    public ApiFactory Api => _api ??= new ApiFactory(this);
+
+    // Test-only configuration, the same for the services under test and the API host
+    public IReadOnlyDictionary<string, string?> Settings => new Dictionary<string, string?>
+    {
+        ["ConnectionStrings:DefaultConnection"] = _container.GetConnectionString(),
+        ["Jwt:Key"] = TestJwt.Key,
+        ["Jwt:Issuer"] = TestJwt.Issuer,
+        ["Jwt:Audience"] = TestJwt.Audience,
+        ["Jwt:ExpiryInMinutes"] = TestJwt.ExpiryInMinutes.ToString()
+    };
+
     // xUnit calls this once, before the first test of the collection
     public async Task InitializeAsync()
     {
         await _container.StartAsync();
 
-        Services = BuildServices(_container.GetConnectionString());
+        Services = BuildServices();
 
         // The real migrations, so the schema is the same as production
         using (var scope = Services.CreateScope())
@@ -67,23 +82,19 @@ public class DatabaseFixture : IAsyncLifetime
     // xUnit calls this once, after the last test: stops and removes the container
     public async Task DisposeAsync()
     {
+        if (_api is not null)
+            await _api.DisposeAsync();
+
         await Services.DisposeAsync();
         await _container.DisposeAsync();
     }
 
     // Same registrations as Program.cs; only the ambient inputs (current user, clock) are replaced
-    private ServiceProvider BuildServices(string connectionString)
+    private ServiceProvider BuildServices()
     {
-        // Test-only values: AuthService issues tokens, so the JWT settings must exist
+        // AuthService issues tokens, so the JWT settings must exist
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["ConnectionStrings:DefaultConnection"] = connectionString,
-                ["Jwt:Key"] = "integration-tests-signing-key-not-a-secret-0123456789",
-                ["Jwt:Issuer"] = "Ecommerce.IntegrationTests",
-                ["Jwt:Audience"] = "Ecommerce.IntegrationTests",
-                ["Jwt:ExpiryInMinutes"] = "60"
-            })
+            .AddInMemoryCollection(Settings)
             .Build();
 
         var services = new ServiceCollection();
@@ -98,16 +109,23 @@ public class DatabaseFixture : IAsyncLifetime
         // The stub is resolved as ICurrentUserProvider in the same scope, so GetService sets the user before the service reads it
         services.AddScoped<TestCurrentUserProvider>();
         services.Replace(ServiceDescriptor.Scoped<ICurrentUserProvider>(sp => sp.GetRequiredService<TestCurrentUserProvider>()));
+
+        AddTestOverrides(services);
+
+        // Fails at startup if a service has a missing dependency, instead of in the middle of a test
+        return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
+    }
+
+    // Shared with the API host (ApiFactory): clock, password hashing and the concurrent request interceptor
+    public void AddTestOverrides(IServiceCollection services)
+    {
         services.Replace(ServiceDescriptor.Singleton<TimeProvider>(Time));
 
-        // Test-only: the hash strength isn't under test, and the default 100,000 iterations made each registration
+        // The hash strength isn't under test, and the default 100,000 iterations made each registration
         // cost ~58 ms, two of them in every test (the default users)
         services.Configure<PasswordHasherOptions>(options => options.IterationCount = 1);
 
         // Added to the options registered by AddInfrastructure, without touching production code
         services.ConfigureDbContext<AppDbContext>((_, options) => options.AddInterceptors(ConcurrentRequests));
-
-        // Fails at startup if a service has a missing dependency, instead of in the middle of a test
-        return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
     }
 }

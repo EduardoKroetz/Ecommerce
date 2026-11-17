@@ -19,6 +19,9 @@ Para rodar, o Docker precisa estar ativo: `dotnet test Ecommerce.IntegrationTest
 | `DefaultTestUsers` | Customer e seller padrão do teste: usados por `Services.Get` e `TestData` quando o teste não informa outro. |
 | `TestUser` | Quem o service representa. Os retornos de cadastro convertem para ele, e `null` significa anônimo. |
 | `ConcurrentRequestInterceptor` | Roda a requisição do `BeforeNextWrite` no primeiro ponto de escrita do service testado. |
+| `ApiFactory` | Sobe o host real da API (`Program.cs`) em `Production`, no mesmo banco, com as mesmas substituições de relógio, hash e interceptor. Criada no primeiro uso. |
+| `ApiTestBase` | Base dos testes de API (`Api/`): relógio no horário real e `Client()`, `Client(Seller)`, `Client(null)` e `ClientWithToken(...)`, no mesmo esquema do `Services.Get`. |
+| `TestTokens` | Monta tokens que a API deve recusar (expirado, outra chave, outro issuer), válidos em todo o resto. |
 
 ## Ciclo de vida
 
@@ -60,5 +63,6 @@ public class ProductServiceTests(DatabaseFixture fixture) : IntegrationTestBase(
 
 - **O relógio não volta:** o `FakeTimeProvider` recusa voltar no tempo, por isso a troca a cada teste fica no `TestTimeProvider`. Não registre um `FakeTimeProvider` direto.
 - **Sem argumento é o padrão, não um desconhecido:** `TestData.PurchaseAsync()` é uma compra do customer padrão, e dois `ProductAsync()` são do mesmo seller (um pedido só). Para outro usuário, crie um explícito (`TestData.CustomerAsync()`).
+- **Nos testes de API, o relógio é o real:** o `JwtBearer` valida a expiração contra o relógio do sistema, não contra o `TimeProvider`. Um token emitido com o relógio fixo (`Now`) chegaria expirado.
 - **Escopos vivem até o fim do teste:** o service usa o `DbContext` do escopo; descartá-lo antes quebra o service.
 - **Toda classe de teste herda `IntegrationTestBase`:** é ela que coloca a classe na collection e faz o reset.

@@ -12,6 +12,9 @@ public abstract class IntegrationTestBase : IAsyncLifetime
     // Fixed so dates written by the services are predictable
     protected static readonly DateTimeOffset Now = new(2026, 1, 15, 10, 30, 0, TimeSpan.Zero);
 
+    // Where the clock starts in each test; the API tests start at the real time (ApiTestBase)
+    protected virtual DateTimeOffset ClockStart => Now;
+
     private readonly DatabaseFixture _fixture;
 
     private readonly DefaultTestUsers _users = new();
@@ -44,7 +47,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
     {
         await _fixture.ResetAsync();
 
-        _fixture.Time.Reset(Now);
+        _fixture.Time.Reset(ClockStart);
 
         _fixture.ConcurrentRequests.Reset();
 
